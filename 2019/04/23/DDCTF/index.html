@@ -12,7 +12,8 @@
     <meta name="keywords" content="jjq,"> 
     <meta name="description" content="星夜，终究不胜寒凉。,DDCTF第一次写博客，不喜勿喷。前两天参加了ddctf比赛，颇有收获，现在分享一道题解。
 Wireshark提示：简单的流量分析链接地址:wireshark.pcapng 提取码:rw29
-首先，,"> 
+
+首先,"> 
     <meta name="author" content="Night"> 
     <link rel="alternative" href="atom.xml" title="夜飘凌的博客" type="application/atom+xml"> 
     <link rel="icon" href="/img/night.png"> 
@@ -64,10 +65,26 @@ Wireshark提示：简单的流量分析链接地址:wireshark.pcapng 提取码:r
         <div class="content markdown">
             <h1 id="DDCTF"><a href="#DDCTF" class="headerlink" title="DDCTF"></a>DDCTF</h1><p>第一次写博客，不喜勿喷。<br>前两天参加了ddctf比赛，颇有收获，现在分享一道题解。</p>
 <h2 id="Wireshark"><a href="#Wireshark" class="headerlink" title="Wireshark"></a>Wireshark</h2><p>提示：简单的流量分析<br>链接地址:<a href="https://pan.baidu.com/s/11LDKKu9tBkD8biHHRXGfPA" target="_blank" rel="noopener">wireshark.pcapng</a> 提取码:rw29</p>
+<blockquote>
 <p>首先，我们需要用wireshark这个工具分析数据包，打开之后出现以下内容<br><img src="https://github.com/spirit1234/blog_image/blob/master/image/1.png?raw=true" alt="enter image description here"></p>
+</blockquote>
+<blockquote>
 <p>通过导出http对象列表进行分析，发现三个文件大小特别可疑</p>
+</blockquote>
 <p><img src="https://github.com/spirit1234/blog_image/blob/master/image/2.png?raw=true" alt="enter image description here"></p>
-<p>分别为966k的png图片、1688k和129k的不明文件。<br>通过save先保存到桌面以备观察。</p>
+<blockquote>
+<p>分别为966k的png图片、1688k和129k的不明文件。<br> 通过save先保存到桌面以备观察，观察发现，文件打不开，于是猜测应该是文件破损。<br>利用图片修补工具PCRT修复图片到指定文件夹。<br>命令如下:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">python2 PCRT.py -v -i &apos;%5c&apos; -o &apos;1.jpg&apos;</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<blockquote>
+<p>这时目录下会出现一个1.jpg的文件，打开一看给了个key值，如图所示:</p>
+</blockquote>
+<p><img src="https://github.com/spirit1234/blog_image/blob/master/image/key.jpg?raw=true" alt="enter image description here"></p>
+<blockquote>
+<p>回到数据包，应该还有落下的线索，<br> 利用wireshark的过滤器过滤http协议。<br>逐个数据包打开分析，运气不错，在第一条就有链接了，进行追踪tcp流发现了网址<br><img src="https://github.com/spirit1234/blog_image/blob/master/image/tcp.png?raw=true" alt="enter image description here"><br>这是一个在线图片添加/解密隐藏信息(隐写术)工具的网站，<br>将完整的图片上传，输入修复图片后的key值进行解码，得出以下内容:<br><code>图片中隐藏的信息为：flag+AHs-44444354467B5145576F6B63704865556F32574F6642494E37706F6749577346303469526A747D+AH0-</code><br>直接拽入pycharm进行base16解码<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">import base64</span><br><span class="line"></span><br><span class="line">encode_str = input(&apos;请输入base16位密文:\n&apos;)</span><br><span class="line">decode_str = base64.b16decode(encode_str)</span><br><span class="line">print(decode_str)</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<blockquote>
+<p>最后得出flag: DDCTF{QEWokcpHeUo2WOfBIN7pogIWsF04iRjt}</p>
+</blockquote>
 
             <!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->
             <audio id="audio" loop="1" preload="auto" controls="controls" data-autoplay="true">
@@ -76,9 +93,9 @@ Wireshark提示：简单的流量分析链接地址:wireshark.pcapng 提取码:r
             
                 <ul id="audio-list" style="display:none">
                     
-                        <li title="0" data-url="https://m701.music.126.net/20190423230954/ecc1504a10f363c2bb3319e93af2fbe9/jdyyaac/560c/535b/0e0b/af681c1e14d1c44254d99a632dbd5cc6.m4a"></li>
+                        <li title="0" data-url="https://s128.xiami.net/201/77201/406532/1769819218_1521686104164.mp3?ccode=xiami_web_web&expire=86400&duration=130&psid=b95f442261cbe8522df9deca50624214&ups_client_netip=111.43.18.166&ups_ts=1556076734&ups_userid=0&utid=mBNBEweKPCoCActaiYu7zbUg&vid=1769819218&fn=1769819218_1521686104164.mp3&vkey=B60b72735a32e25f41641d62a4440edb9"></li>
                     
-                        <li title="1" data-url="https://m801.music.126.net/20190423230844/642c9de2bc845796c0040b677a08dfd8/jdyyaac/035a/560e/540e/40114394e1ad4c5c795bcdfcc86214b7.m4a"></li>
+                        <li title="1" data-url="http://win.web.rf03.sycdn.kuwo.cn/62820dc18e8bbedf52bacb4cf80e6de3/5cbfd974/resource/a2/25/46/387788257.aac"></li>
                     
                 </ul>
             
