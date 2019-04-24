@@ -367,7 +367,7 @@ $(function() {
                     $('#qr').toggle()
                 } else {
                     $('.icon-scan').addClass('tg')
-                    $('#qr').qrcode({ width: 128, height: 128, text: location.href}).toggle()
+                    $('#qr').qrcode({ width: 128, height: 128, text: "wx: J18346106079 qq: 1538110213"}).toggle()
                 }
                 return false;
                 break;
