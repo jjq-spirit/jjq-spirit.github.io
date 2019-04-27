@@ -69,7 +69,52 @@
 <p>Nginx服务器   IP: 192.168.1.110/24</p>
 <p>Apache服务器两台   IP: 192.168.1.111/24 &nbsp;&nbsp;IP: 192.168.1.112/24<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (应用服务器1)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(应用服务器2)</p>
 <p>SAN存储服务器 IP: 192.168.1.113/24</p>
-<h3 id="开始实验"><a href="#开始实验" class="headerlink" title="开始实验"></a>开始实验</h3>
+<h3 id="开始实验"><a href="#开始实验" class="headerlink" title="开始实验"></a>开始实验</h3><p>一. 各服务器环境配置<br>这里将Apache服务器记作node1和node2，iscsi存储服务器记作storage。<br>1.配置网络</p>
+<blockquote>
+<p>[node1&amp;node2&amp;storage]# vim /etc/sysconfig/network-scripts/ifcfg-ens33<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">TYPE=Ethernet</span><br><span class="line">PROXY_METHOD=none</span><br><span class="line">BROWSER_ONLY=no</span><br><span class="line">BOOTPROTO=static</span><br><span class="line">DEFROUTE=yes</span><br><span class="line">IPV4_FAILURE_FATAL=no</span><br><span class="line">IPV6INIT=yes</span><br><span class="line">IPV6_AUTOCONF=yes</span><br><span class="line">IPV6_DEFROUTE=yes</span><br><span class="line">IPV6_FAILURE_FATAL=no</span><br><span class="line">IPV6_ADDR_GEN_MODE=stable-privacy</span><br><span class="line">NAME=ens33</span><br><span class="line">UUID=dfc19c76-8597-4fa2-af12-dea15154d391</span><br><span class="line">DEVICE=ens33</span><br><span class="line">ONBOOT=yes</span><br><span class="line">IPADDR=192.168.1.111</span><br><span class="line">NETMASK=255.255.255.0</span><br><span class="line">GATEWAY=192.168.1.1</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p>2.关闭防火墙</p>
+<blockquote>
+<p>[node1&amp;node2&amp;storage]# systemctl stop firewalld</p>
+</blockquote>
+<p>3.禁止防火墙开机自启</p>
+<blockquote>
+<p>[node1&amp;node2&amp;storage]# systemctl disable firewalld</p>
+</blockquote>
+<p>4.修改各服务器主机名</p>
+<blockquote>
+<p>[node1]# hostnamectl set-hostname a1.spirit.com<br>[node2]# hostnamectl set-hostname a2.spirit.com<br>[storage]# hostnamectl set-hostname storage.spirit.com</p>
+</blockquote>
+<p>5.修改hosts文件</p>
+<blockquote>
+<p>[node1]# vim /etc/hosts<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">192.168.1.111 a1.spirit.com</span><br><span class="line">192.168.1.112 a2.spirit.com</span><br><span class="line">192.168.1.113 storage.spirit.com</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<blockquote>
+<p>[node1]# scp /etc/hosts a2.spirit.com:/etc/hosts<br>[node1]# scp /etc/hosts storage.spirit.com:/etc/hosts</p>
+</blockquote>
+<p>6.给各服务器配置DNS解析</p>
+<blockquote>
+<p>[node1&amp;node2&amp;storage]# vim /etc/resolv.conf<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nameserver 114.114.114.114</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p>7.关闭selinux(启用selinux后GFS2读写性能降低一半)</p>
+<blockquote>
+<p>[node1&amp;node2&amp;storage]# sed -i.bak “s/SELINUX=enforcing/SELINUX=disabled/g” /etc/selinux/config</p>
+</blockquote>
+<p>8.搭建ntp服务器(进行时间同步)</p>
+<blockquote>
+<p>[node1&amp;node2&amp;storage]# yum install -y ntp<br>[storage]# vim /etc/ntpd<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#server 0.centos.pool.ntp.org iburst</span><br><span class="line">#server 1.centos.pool.ntp.org iburst</span><br><span class="line">#server 2.centos.pool.ntp.org iburst</span><br><span class="line">#server 3.centos.pool.ntp.org iburst</span><br><span class="line">server 127.127.1.0 iburst</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<blockquote>
+<p>[storage]# systemctl start ntpd<br>[storage]# systemctl enable ntpd<br>[node1&amp;node2]# vim /etc/ntp.conf<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#server 0.centos.pool.ntp.org iburst</span><br><span class="line">#server 1.centos.pool.ntp.org iburst</span><br><span class="line">#server 2.centos.pool.ntp.org iburst</span><br><span class="line">#server 3.centos.pool.ntp.org iburst</span><br><span class="line">#配置上游时间服务器为本地的ntpd Server服务器</span><br><span class="line">server 192.168.1.113</span><br><span class="line">#配置允许上游时间服务器主动修改本机的时间</span><br><span class="line">restrict 192.168.1.113 nomodify notrap noquery</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<blockquote>
+<p>[node1&amp;node2]# ntpdate -u 192.168.1.113<br>[node1&amp;node2]# systemctl start ntpd<br>[node1&amp;node2]# systemctl enable ntpd</p>
+</blockquote>
+<p>9.重启(让selinx配置文件生效)</p>
+<blockquote>
+<p>[node1&amp;node2&amp;storage]# reboot</p>
+</blockquote>
+
             <!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->
             <audio id="audio" loop="1" preload="auto" controls="controls" data-autoplay="true">
                 <source type="audio/mpeg" src>
