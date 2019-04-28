@@ -69,38 +69,38 @@
 <p>Nginx服务器   IP: 192.168.1.110/24</p>
 <p>Apache服务器两台   IP: 192.168.1.111/24 &nbsp;&nbsp;IP: 192.168.1.112/24<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (应用服务器1)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(应用服务器2)</p>
 <p>SAN存储服务器 IP: 192.168.1.113/24</p>
-<h3 id="开始实验"><a href="#开始实验" class="headerlink" title="开始实验"></a>开始实验</h3><p>一. 各服务器环境配置<br>这里将Apache服务器记作node1和node2，iscsi存储服务器记作storage。<br>1.配置网络</p>
+<h3 id="开始实验"><a href="#开始实验" class="headerlink" title="开始实验"></a>开始实验</h3><h4 id="一-nbsp-各服务器环境配置"><a href="#一-nbsp-各服务器环境配置" class="headerlink" title="一. &nbsp;各服务器环境配置"></a>一. &nbsp;各服务器环境配置</h4><p>这里将两个Apache服务器记作node1和node2，iscsi存储服务器记作storage。<br>1.&nbsp;配置网络</p>
 <blockquote>
 <p>[node1&amp;node2&amp;storage]# vim /etc/sysconfig/network-scripts/ifcfg-ens33<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">TYPE=Ethernet</span><br><span class="line">PROXY_METHOD=none</span><br><span class="line">BROWSER_ONLY=no</span><br><span class="line">BOOTPROTO=static</span><br><span class="line">DEFROUTE=yes</span><br><span class="line">IPV4_FAILURE_FATAL=no</span><br><span class="line">IPV6INIT=yes</span><br><span class="line">IPV6_AUTOCONF=yes</span><br><span class="line">IPV6_DEFROUTE=yes</span><br><span class="line">IPV6_FAILURE_FATAL=no</span><br><span class="line">IPV6_ADDR_GEN_MODE=stable-privacy</span><br><span class="line">NAME=ens33</span><br><span class="line">UUID=dfc19c76-8597-4fa2-af12-dea15154d391</span><br><span class="line">DEVICE=ens33</span><br><span class="line">ONBOOT=yes</span><br><span class="line">IPADDR=192.168.1.111</span><br><span class="line">NETMASK=255.255.255.0</span><br><span class="line">GATEWAY=192.168.1.1</span><br></pre></td></tr></table></figure></p>
 </blockquote>
-<p>2.关闭防火墙</p>
+<p>2.&nbsp;关闭防火墙</p>
 <blockquote>
 <p>[node1&amp;node2&amp;storage]# systemctl stop firewalld</p>
 </blockquote>
-<p>3.禁止防火墙开机自启</p>
+<p>3.&nbsp;禁止防火墙开机自启</p>
 <blockquote>
 <p>[node1&amp;node2&amp;storage]# systemctl disable firewalld</p>
 </blockquote>
-<p>4.修改各服务器主机名</p>
+<p>4.&nbsp;修改各服务器主机名</p>
 <blockquote>
 <p>[node1]# hostnamectl set-hostname a1.spirit.com<br>[node2]# hostnamectl set-hostname a2.spirit.com<br>[storage]# hostnamectl set-hostname storage.spirit.com</p>
 </blockquote>
-<p>5.修改hosts文件</p>
+<p>5.&nbsp;修改hosts文件</p>
 <blockquote>
 <p>[node1]# vim /etc/hosts<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">192.168.1.111 a1.spirit.com</span><br><span class="line">192.168.1.112 a2.spirit.com</span><br><span class="line">192.168.1.113 storage.spirit.com</span><br></pre></td></tr></table></figure></p>
 </blockquote>
 <blockquote>
 <p>[node1]# scp /etc/hosts a2.spirit.com:/etc/hosts<br>[node1]# scp /etc/hosts storage.spirit.com:/etc/hosts</p>
 </blockquote>
-<p>6.给各服务器配置DNS解析</p>
+<p>6.&nbsp;给各服务器配置DNS解析</p>
 <blockquote>
 <p>[node1&amp;node2&amp;storage]# vim /etc/resolv.conf<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nameserver 114.114.114.114</span><br></pre></td></tr></table></figure></p>
 </blockquote>
-<p>7.关闭selinux(启用selinux后GFS2读写性能降低一半)</p>
+<p>7.&nbsp;关闭selinux(启用selinux后GFS2读写性能降低一半)</p>
 <blockquote>
 <p>[node1&amp;node2&amp;storage]# sed -i.bak “s/SELINUX=enforcing/SELINUX=disabled/g” /etc/selinux/config</p>
 </blockquote>
-<p>8.搭建ntp服务器(进行时间同步)</p>
+<p>8.&nbsp;搭建ntp服务器(进行时间同步)</p>
 <blockquote>
 <p>[node1&amp;node2&amp;storage]# yum install -y ntp<br>[storage]# vim /etc/ntpd<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#server 0.centos.pool.ntp.org iburst</span><br><span class="line">#server 1.centos.pool.ntp.org iburst</span><br><span class="line">#server 2.centos.pool.ntp.org iburst</span><br><span class="line">#server 3.centos.pool.ntp.org iburst</span><br><span class="line">server 127.127.1.0 iburst</span><br></pre></td></tr></table></figure></p>
 </blockquote>
@@ -113,6 +113,154 @@
 <p>9.重启(让selinx配置文件生效)</p>
 <blockquote>
 <p>[node1&amp;node2&amp;storage]# reboot</p>
+</blockquote>
+<h4 id="二-nbsp-搭建集群"><a href="#二-nbsp-搭建集群" class="headerlink" title="二.&nbsp;搭建集群"></a>二.&nbsp;搭建集群</h4><p>1.&nbsp;安装集群软件</p>
+<blockquote>
+<p>[node1&amp;node2]# yum -y install pacemaker pcs</p>
+</blockquote>
+<p>2.&nbsp;启动服务并设置开机启动</p>
+<blockquote>
+<p>[node1&amp;node2]# systemctl start pcsd<br>[node1&amp;node2]# systemctl enable pcsd</p>
+</blockquote>
+<p>3.&nbsp;修改集群管理员密码</p>
+<blockquote>
+<p>[node1&amp;node2]#  passwd hacluster</p>
+</blockquote>
+<p>4.&nbsp;建立认证</p>
+<blockquote>
+<p>[node1/node2]# pcs cluster auth a1.spirit.com a2.spirit.com<br>Username: hacluster<br>Password:<br>a2.spirit.com: Authorized<br>a1.spirit.com: Authorized</p>
+</blockquote>
+<p>5.&nbsp;配置集群</p>
+<blockquote>
+<p>[node1/node2]#  pcs cluster setup –name ha_cluster a1.spirit.com a2.spirit.com</p>
+</blockquote>
+<p>6.&nbsp;启动集群</p>
+<blockquote>
+<p>[node1/node2]# pcs cluster start –all</p>
+</blockquote>
+<p>7.&nbsp;设置集群开机启动</p>
+<blockquote>
+<p>[node1/node2]# pcs cluster enable –all </p>
+</blockquote>
+<p>8.&nbsp;查看集群状态</p>
+<blockquote>
+<p>[node1/node2]# pcs status cluster<br>  PCSD Status:<br>  a1.spirit.com: Online<br>  a2.spirit.com: Online</p>
+</blockquote>
+<p>9.&nbsp;查看corosync状态</p>
+<blockquote>
+<p>[node1/node2]# pcs status corosync<br>    Nodeid      Votes Name<br>         1          1 a1.spirit.com (local)<br>         2          1 a2.spirit.com</p>
+</blockquote>
+<h4 id="三-nbsp-创建ISCSI共享存储"><a href="#三-nbsp-创建ISCSI共享存储" class="headerlink" title="三.&nbsp;创建ISCSI共享存储"></a>三.&nbsp;创建ISCSI共享存储</h4><p>1.&nbsp;安装配置工具</p>
+<blockquote>
+<p>[storage]# yum install -y  targetcli</p>
+</blockquote>
+<p>2.&nbsp;创建文件存储类型</p>
+<blockquote>
+<p>[storage]# targetcli<br>/&gt; cd /backstores/fileio<br>/backstores/fileio&gt; create disk01 /tmp/disk01.img 4G   (在/tmp/下分出4G空间作为存储)<br>Created fileio disk01 with size 4294967296</p>
+</blockquote>
+<p>3.&nbsp;配置iscsi共享</p>
+<blockquote>
+<p>/backstores/fileio&gt; cd /iscsi<br>/iscsi&gt; create iqn.2019-04.spirit.com:storage.target01<br>/iscsi&gt; cd iqn.2019-04.spirit.com:storage.target01/tpg1/luns<br>/iscsi/iqn.20…t01/tpg1/luns&gt; create /backstores/fileio/disk01<br>/iscsi/iqn.20…t01/tpg1/luns&gt; cd ../acls<br>/iscsi/iqn.20…t01/tpg1/acls&gt; create iqn.2019-04.spirit.com:node1<br>/iscsi/iqn.20…t01/tpg1/acls&gt; cd iqn.2019-04.spirit.com:node1<br>/iscsi/iqn.20…rit.com:node1&gt; set auth userid=spirit<br>/iscsi/iqn.20…rit.com:node1&gt; set auth password=spirit<br>/iscsi/iqn.20…rit.com:node1&gt; cd ..<br>/iscsi/iqn.20…t01/tpg1/acls&gt; create iqn.2019-04.spirit.com:node2<br>/iscsi/iqn.20…t01/tpg1/acls&gt; cd iqn.2019-04.spirit.com:node2<br>/iscsi/iqn.20…rit.com:node2&gt; set auth userid=spirit<br>/iscsi/iqn.20…rit.com:node2&gt; set auth password=spirit<br>/iscsi/iqn.20…rit.com:node2&gt; exit</p>
+</blockquote>
+<h4 id="四-nbsp-配置两个Apache服务器访问存储设备"><a href="#四-nbsp-配置两个Apache服务器访问存储设备" class="headerlink" title="四.&nbsp;配置两个Apache服务器访问存储设备"></a>四.&nbsp;配置两个Apache服务器访问存储设备</h4><p>1.&nbsp;安装iscsi软件包</p>
+<blockquote>
+<p>[node1&amp;node2]# yum install iscsi-initiator-utils -y</p>
+</blockquote>
+<p>2.&nbsp;配置initiatorname</p>
+<blockquote>
+<p>[node1]# vim /etc/iscsi/initiatorname.iscsi<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">InitiatorName=iqn.2019-04.spirit.com:node1</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<blockquote>
+<p>[node2]# vim /etc/iscsi/initiatorname.iscsi<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">InitiatorName=iqn.2019-04.spirit.com:node2</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p>3.&nbsp;配置访问时的账号密码</p>
+<blockquote>
+<p>[node1&amp;node2]# vim /etc/iscsi/iscsid.conf<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">57 node.session.auth.authmethod = CHAP</span><br><span class="line">58 # To set a CHAP username and password for initiator</span><br><span class="line">59 # authentication by the target(s), uncomment the following lines:</span><br><span class="line">60 node.session.auth.username = spirit</span><br><span class="line">61 node.session.auth.password = spirit</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<p>4.&nbsp;重启iscsid服务</p>
+<blockquote>
+<p>[node1&amp;node2]# systemctl restart iscsid</p>
+</blockquote>
+<p>5.&nbsp;发现后端存储</p>
+<blockquote>
+<p>[node1&amp;node2]# iscsiadm -m discovery -t sendtargets -p 192.168.1.113:3260</p>
+</blockquote>
+<p>6.&nbsp;登录后端存储</p>
+<blockquote>
+<p>[node1&amp;node2]# iscsiadm -m node -T iqn.2019-04.spirit.com:storage.target01 -l</p>
+</blockquote>
+<h4 id="五-nbsp-配置CLVM和GFS2"><a href="#五-nbsp-配置CLVM和GFS2" class="headerlink" title="五.&nbsp;配置CLVM和GFS2"></a>五.&nbsp;配置CLVM和GFS2</h4><p>1.&nbsp;安装Fence、CLVM、GFS2包</p>
+<blockquote>
+<p>[node1&amp;node2]# yum -y install fence-agents-all lvm2-cluster gfs2-utils</p>
+</blockquote>
+<p>2.&nbsp;配置集群LVM</p>
+<blockquote>
+<p>[node1&amp;node2]# lvmconf –enable-cluster</p>
+</blockquote>
+<p>3.重启(使CLVM生效)</p>
+<blockquote>
+<p>[node1&amp;node2]# reboot</p>
+</blockquote>
+<p>4.&nbsp;配置集群资源</p>
+<blockquote>
+<p>[node1/node2]# pcs property set stonith-enabled=false</p>
+<p>[node1/node2]# pcs property set no-quorum-policy=ignore</p>
+<p>[node1/node2]# pcs resource create dlm ocf:pacemaker:controld allow_stonith_disabled=true op monitor interval=30s clone interleave=true ordered=true</p>
+<p>[node1/node2]# pcs resource create clvmd ocf:heartbeat:clvm op monitor interval=30s clone interleave=true ordered=true</p>
+<p>[node1/node2]# pcs constraint order start dlm-clone then clvmd-clone</p>
+<p>[node1/node2]# pcs constraint colocation add clvmd-clone with dlm-clone</p>
+</blockquote>
+<p>5.&nbsp;禁止集群投票</p>
+<blockquote>
+<p>[node1/node2]# pcs property set no-quorum-policy=freeze</p>
+</blockquote>
+<p>6.&nbsp;共享存储分区</p>
+<blockquote>
+<p>[node1/node2]# fdisk /dev/sdb<br>Command (m for help): n<br>Partition type:<br>p&nbsp;&nbsp;&nbsp;primary (0 primary, 0 extended, 4 free)<br>e&nbsp;&nbsp;&nbsp;extended<br>Select (default p): p<br>Partition number (1-4, default 1):<br>First sector (8192-8388607, default 8192):<br>Using default value 8192<br>Last sector, +sectors or +size{K,M,G} (8192-8388607, default 8388607):<br>Using default value 8388607<br>Partition 1 of type Linux and of size 4 GiB is set<br>Command (m for help): w<br>The partition table has been altered!</p>
+</blockquote>
+<h4 id="六-nbsp-创建CLVM并且格式化成GFS2"><a href="#六-nbsp-创建CLVM并且格式化成GFS2" class="headerlink" title="六.&nbsp;创建CLVM并且格式化成GFS2"></a>六.&nbsp;创建CLVM并且格式化成GFS2</h4><p>1.&nbsp;创建物理卷</p>
+<blockquote>
+<p>[node1/node2]# pvcreate /dev/sdb1</p>
+</blockquote>
+<p>2.&nbsp;创建集群卷组</p>
+<blockquote>
+<p>[node1/node2]# vgcreate -cy vg_cluster /dev/sdb1</p>
+</blockquote>
+<p>3.&nbsp;创建逻辑卷</p>
+<blockquote>
+<p>[node1/node2]# lvcreate -l100%FREE -n lv_cluster vg_cluster</p>
+</blockquote>
+<p>4.&nbsp;格式化成GFS2文件系统</p>
+<blockquote>
+<p>[node1/node2]# mkfs.gfs2 -p lock_dlm -t ha_cluster:gfs2 -j 2 /dev/vg_cluster/lv_cluster</p>
+</blockquote>
+<h4 id="七-nbsp-挂载实现共享存储"><a href="#七-nbsp-挂载实现共享存储" class="headerlink" title="七.&nbsp;挂载实现共享存储"></a>七.&nbsp;挂载实现共享存储</h4><p>1.&nbsp;在两个Apache服务器上安装 httpd</p>
+<blockquote>
+<p>[node1&amp;node2]# yum install -y httpd</p>
+</blockquote>
+<p>2.&nbsp;将共享存储加入集群资源中</p>
+<blockquote>
+<p>[node1/node2]# pcs resource create fs_gfs2 Filesystem device=”/dev/vg_cluster/lv_cluster” directory=”/var/www/html” fstype=”gfs2” options=”noatime,nodiratime” op monitor interval=10s clone interleave=true</p>
+</blockquote>
+<p>3.&nbsp;设置CLVM和GFS2服务启动顺序</p>
+<blockquote>
+<p>[node1/node2]# pcs constraint order start clvmd-clone then fs_gfs2-clone</p>
+</blockquote>
+<p>4.&nbsp;绑定CLVM和GFS2服务启动顺序</p>
+<blockquote>
+<p>[node1/node2]# pcs constraint colocation add fs_gfs2-clone with clvmd-clone</p>
+</blockquote>
+<p>5.&nbsp;查看是否挂载上</p>
+<blockquote>
+<p>[node1/node2]# df<br>/dev/mapper/vg_cluster-lv_cluster   4185696   34952   4150744   1% /var/www/html</p>
+</blockquote>
+<p>6.&nbsp;检测是否存储同步</p>
+<blockquote>
+<p>[node1]# echo ‘apache1’ &gt; /var/www/html/index.html<br>[node2]# cat /var/www/html/index.html<br>apache1</p>
+</blockquote>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><blockquote>
+<p>实验中可能遇到的问题: 创建逻辑卷时报错</p>
+<p>解决办法:<br>[node1&amp;node2]# lvmconf –enable-cluster<br>[storage]# systemctl restart target<br>[node1&amp;node2]# reboot  </p>
 </blockquote>
 
             <!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->
