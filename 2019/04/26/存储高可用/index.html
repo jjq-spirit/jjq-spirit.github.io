@@ -73,34 +73,38 @@
 <blockquote>
 <p>[node1&amp;node2&amp;storage]# vim /etc/sysconfig/network-scripts/ifcfg-ens33<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">TYPE=Ethernet</span><br><span class="line">PROXY_METHOD=none</span><br><span class="line">BROWSER_ONLY=no</span><br><span class="line">BOOTPROTO=static</span><br><span class="line">DEFROUTE=yes</span><br><span class="line">IPV4_FAILURE_FATAL=no</span><br><span class="line">IPV6INIT=yes</span><br><span class="line">IPV6_AUTOCONF=yes</span><br><span class="line">IPV6_DEFROUTE=yes</span><br><span class="line">IPV6_FAILURE_FATAL=no</span><br><span class="line">IPV6_ADDR_GEN_MODE=stable-privacy</span><br><span class="line">NAME=ens33</span><br><span class="line">UUID=dfc19c76-8597-4fa2-af12-dea15154d391</span><br><span class="line">DEVICE=ens33</span><br><span class="line">ONBOOT=yes</span><br><span class="line">IPADDR=192.168.1.111</span><br><span class="line">NETMASK=255.255.255.0</span><br><span class="line">GATEWAY=192.168.1.1</span><br></pre></td></tr></table></figure></p>
 </blockquote>
-<p>2.&nbsp;关闭防火墙</p>
+<p>2.&nbsp;重启网卡</p>
+<blockquote>
+<p>[node1&amp;node2&amp;storage] systemctl restart network </p>
+</blockquote>
+<p>3.&nbsp;关闭防火墙</p>
 <blockquote>
 <p>[node1&amp;node2&amp;storage]# systemctl stop firewalld</p>
 </blockquote>
-<p>3.&nbsp;禁止防火墙开机自启</p>
+<p>4.&nbsp;禁止防火墙开机自启</p>
 <blockquote>
 <p>[node1&amp;node2&amp;storage]# systemctl disable firewalld</p>
 </blockquote>
-<p>4.&nbsp;修改各服务器主机名</p>
+<p>5.&nbsp;修改各服务器主机名</p>
 <blockquote>
 <p>[node1]# hostnamectl set-hostname a1.spirit.com<br>[node2]# hostnamectl set-hostname a2.spirit.com<br>[storage]# hostnamectl set-hostname storage.spirit.com</p>
 </blockquote>
-<p>5.&nbsp;修改hosts文件</p>
+<p>6.&nbsp;修改hosts文件</p>
 <blockquote>
 <p>[node1]# vim /etc/hosts<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">192.168.1.111 a1.spirit.com</span><br><span class="line">192.168.1.112 a2.spirit.com</span><br><span class="line">192.168.1.113 storage.spirit.com</span><br></pre></td></tr></table></figure></p>
 </blockquote>
 <blockquote>
 <p>[node1]# scp /etc/hosts a2.spirit.com:/etc/hosts<br>[node1]# scp /etc/hosts storage.spirit.com:/etc/hosts</p>
 </blockquote>
-<p>6.&nbsp;给各服务器配置DNS解析</p>
+<p>7.&nbsp;给各服务器配置DNS解析</p>
 <blockquote>
 <p>[node1&amp;node2&amp;storage]# vim /etc/resolv.conf<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nameserver 114.114.114.114</span><br></pre></td></tr></table></figure></p>
 </blockquote>
-<p>7.&nbsp;关闭selinux(启用selinux后GFS2读写性能降低一半)</p>
+<p>8.&nbsp;关闭selinux(启用selinux后GFS2读写性能降低一半)</p>
 <blockquote>
 <p>[node1&amp;node2&amp;storage]# sed -i.bak “s/SELINUX=enforcing/SELINUX=disabled/g” /etc/selinux/config</p>
 </blockquote>
-<p>8.&nbsp;搭建ntp服务器(进行时间同步)</p>
+<p>9.&nbsp;搭建ntp服务器(进行时间同步)</p>
 <blockquote>
 <p>[node1&amp;node2&amp;storage]# yum install -y ntp<br>[storage]# vim /etc/ntpd<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#server 0.centos.pool.ntp.org iburst</span><br><span class="line">#server 1.centos.pool.ntp.org iburst</span><br><span class="line">#server 2.centos.pool.ntp.org iburst</span><br><span class="line">#server 3.centos.pool.ntp.org iburst</span><br><span class="line">server 127.127.1.0 iburst</span><br></pre></td></tr></table></figure></p>
 </blockquote>
@@ -110,7 +114,7 @@
 <blockquote>
 <p>[node1&amp;node2]# ntpdate -u 192.168.1.113<br>[node1&amp;node2]# systemctl start ntpd<br>[node1&amp;node2]# systemctl enable ntpd</p>
 </blockquote>
-<p>9.重启(让selinx配置文件生效)</p>
+<p>10.重启(让selinx配置文件生效)</p>
 <blockquote>
 <p>[node1&amp;node2&amp;storage]# reboot</p>
 </blockquote>
