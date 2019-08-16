@@ -1,0 +1,224 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hans" class="loading">
+<head><meta name="generator" content="Hexo 3.8.0">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>解决Centos6误删除boot分区的恢复解决方案 - 夜飘凌的博客</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="google" content="notranslate">
+    <meta name="keywords" content="jjq,"> 
+    <meta name="description" content="星夜，终究不胜寒凉。,问题描述
+在手工操作系统中，难免会手误删除文件或者目录。如果是普通文件目录， 有概率利用extundelete工具修复，但是手动删除了boot分区导致没法启动，此时就需要通过光盘镜像进行手工恢复。
+,"> 
+    <meta name="author" content="Night"> 
+    <link rel="alternative" href="atom.xml" title="夜飘凌的博客" type="application/atom+xml"> 
+    <link rel="icon" href="/img/night.png"> 
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+    <link rel="stylesheet" href="/css/diaspora.css">
+    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({
+              google_ad_client: "ca-pub-8691406134231910",
+              enable_page_level_ads: true
+         });
+    </script>
+    <script async custom-element="amp-auto-ads" src="https://cdn.ampproject.org/v0/amp-auto-ads-0.1.js">
+    </script>
+</head>
+</html>
+<body class="loading">
+    <span id="config-title" style="display:none">夜飘凌的博客</span>
+    <div id="loader"></div>
+    <div id="single">
+    <div id="top" style="display: block;">
+    <div class="bar" style="width: 0;"></div>
+    <a class="icon-home image-icon" href="javascript:;" data-url="https://jjq-spirit.github.com"></a>
+    <div title="播放/暂停" class="icon-play"></div>
+    <h3 class="subtitle">解决Centos6误删除boot分区的恢复解决方案</h3>
+    <div class="social">
+        <!--<div class="like-icon">-->
+            <!--<a href="javascript:;" class="likeThis active"><span class="icon-like"></span><span class="count">76</span></a>-->
+        <!--</div>-->
+        <div>
+            <div class="share">
+                <a title="获取二维码" class="icon-scan" href="javascript:;"></a>
+            </div>
+            <div id="qr"></div>
+        </div>
+    </div>
+    <div class="scrollbar"></div>
+</div>
+
+    <div class="section">
+        <div class="article">
+    <div class="main">
+        <h1 class="title">解决Centos6误删除boot分区的恢复解决方案</h1>
+        <div class="stuff">
+            <span>八月 16, 2019</span>
+            
+
+        </div>
+        <div class="content markdown">
+            <h3 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h3><blockquote>
+<p>在手工操作系统中，难免会手误删除文件或者目录。如果是普通文件目录， 有概率利用extundelete工具修复，但是手动删除了boot分区导致没法启动，此时就需要通过光盘镜像进行手工恢复。</p>
+</blockquote>
+<h3 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h3><p>Vmware 12<br>Centos 6.8系统 ( 安装时建立好boot分区 )</p>
+<h3 id="实验过程"><a href="#实验过程" class="headerlink" title="实验过程"></a>实验过程</h3><p><strong>一. &nbsp; 删除boot分区</strong></p>
+<blockquote>
+<p>(1). &nbsp;df -h   &nbsp; &nbsp; &nbsp;  # 查看挂载情况</p>
+</blockquote>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@boot_test ~]# df -h</span><br><span class="line">Filesystem      Size  Used Avail Use% Mounted on</span><br><span class="line">/dev/sda3        18G  2.3G   15G  14% /</span><br><span class="line">tmpfs           996M     0  996M   0% /dev/shm</span><br><span class="line">/dev/sda1       976M   33M  893M   4% /boot</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>(2). &nbsp;rm -rf /boot/  &nbsp; &nbsp; &nbsp; # 强制删除/boot/分区</p>
+</blockquote>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[root@boot_test ~]# rm -rf /boot/</span><br><span class="line">rm: 无法删除"/boot": 设备或资源忙</span><br><span class="line">[root@boot_test ~]# df -h</span><br><span class="line">Filesystem      Size  Used Avail Use% Mounted on</span><br><span class="line">/dev/sda3        18G  2.3G   15G  14% /</span><br><span class="line">tmpfs           996M     0  996M   0% /dev/shm</span><br><span class="line">/dev/sda1       976M  1.3M  924M   1% /boot</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>(3). &nbsp;reboot &nbsp;&nbsp;&nbsp; # 重启</p>
+</blockquote>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[root@boot_test ~]# reboot</span><br><span class="line"></span><br><span class="line">Broadcast message from root@boot_test</span><br><span class="line">	(/dev/pts/1) at 10:46 ...</span><br><span class="line"></span><br><span class="line">The system is going down for reboot NOW!</span><br></pre></td></tr></table></figure>
+<hr>
+<p><strong>二. &nbsp; 进入Centos6救援模式</strong></p>
+<blockquote>
+<p>(1). &nbsp;进系统按F2进入BIOS，选择光盘启动<br><img src="https://github.com/spirit1234/blog_image/blob/master/image/boot/BIOS.png?raw=true" alt="enter image description here"></p>
+</blockquote>
+<blockquote>
+<p>(2). &nbsp;F10保存退出，准备进入救援模式<br><img src="https://github.com/spirit1234/blog_image/blob/master/image/boot/rescue.png?raw=true" alt="enter image description here"></p>
+</blockquote>
+<blockquote>
+<p>(3). &nbsp;配置ssh IP地址<br><img src="https://github.com/spirit1234/blog_image/blob/master/image/boot/ssh_network.png?raw=true" alt="enter image description here"></p>
+</blockquote>
+<blockquote>
+<p>(4). &nbsp;chroot /mnt/sysimage/&nbsp;&nbsp;&nbsp; # 将/mnt/sysimage/目录下的文件移到根下<br>(5). &nbsp;/etc/rc.d/init.d/sshd restart &nbsp;&nbsp;&nbsp; # 开启远程ssh服务<br><img src="https://github.com/spirit1234/blog_image/blob/master/image/boot/start_ssh.png?raw=true" alt="enter image description here"></p>
+</blockquote>
+<blockquote>
+<p>(6). &nbsp;利用XShell远程连接登录</p>
+</blockquote>
+<hr>
+<p><strong>三. &nbsp; 开始恢复boot分区</strong></p>
+<blockquote>
+<p>(1). &nbsp;mount /dev/sr0 /mnt &nbsp;&nbsp;&nbsp; # 挂载光盘到mnt下</p>
+</blockquote>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[root@boot_test ~]# mount /dev/sr0 /mnt/</span><br><span class="line">mount: block device /dev/sr0 is write-protected, mounting read-only</span><br><span class="line">[root@boot_test ~]# ls /mnt/</span><br><span class="line">CentOS_BuildTag  isolinux                  RPM-GPG-KEY-CentOS-Debug-6</span><br><span class="line">EFI              Packages                  RPM-GPG-KEY-CentOS-Security-6</span><br><span class="line">EULA             RELEASE-NOTES-en-US.html  RPM-GPG-KEY-CentOS-Testing-6</span><br><span class="line">GPL              repodata                  TRANS.TBL</span><br><span class="line">images           RPM-GPG-KEY-CentOS-6</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>(2). &nbsp;rpm -ivh /mnt/Packages/kernel-2.6.32-642.el6.x86_64.rpm –root=/ –force &nbsp;&nbsp;&nbsp; # 强制重新安装内核rpm包</p>
+</blockquote>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[root@boot_test ~]# rpm -ivh /mnt/Packages/kernel-2.6.32-642.el6.x86_64.rpm --root=/ --force</span><br><span class="line">Preparing...                ########################################### [100%]</span><br><span class="line">   1:kernel                 ########################################### [100%]</span><br><span class="line">[root@boot_test ~]# ls /boot/</span><br><span class="line">config-2.6.32-642.el6.x86_64         System.map-2.6.32-642.el6.x86_64</span><br><span class="line">initramfs-2.6.32-642.el6.x86_64.img  vmlinuz-2.6.32-642.el6.x86_64</span><br><span class="line">symvers-2.6.32-642.el6.x86_64.gz</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>(3). &nbsp;在/boot/目录下做相应恢复配置</p>
+</blockquote>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[root@boot_test ~]# mkdir /boot/grub</span><br><span class="line">[root@boot_test ~]# cp -prf /usr/share/grub/x86_64-redhat/* /boot/grub/</span><br><span class="line">[root@boot_test ~]# touch /boot/grub/grub.conf</span><br><span class="line">[root@boot_test ~]# ls /boot/grub/</span><br><span class="line">e2fs_stage1_5  iso9660_stage1_5   stage1           vstafs_stage1_5</span><br><span class="line">fat_stage1_5   jfs_stage1_5       stage2           xfs_stage1_5</span><br><span class="line">ffs_stage1_5   minix_stage1_5     stage2_eltorito</span><br><span class="line">grub.conf      reiserfs_stage1_5  ufs2_stage1_5</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>(4). &nbsp;启动grub</p>
+</blockquote>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">[root@boot_test ~]# grub</span><br><span class="line">Probing devices to guess BIOS drives. This may take a long time.</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    GNU GRUB  version 0.97  (640K lower / 3072K upper memory)</span><br><span class="line"></span><br><span class="line"> [ Minimal BASH-like line editing is supported.  For the first word, TAB</span><br><span class="line">   lists possible command completions.  Anywhere else TAB lists the possible</span><br><span class="line">   completions of a device/filename.]</span><br><span class="line">grub&gt; root (hd0,0)            # 设置/boot/分区为/dev/sda1</span><br><span class="line">root (hd0,0)</span><br><span class="line"> Filesystem type is ext2fs, partition type 0x83</span><br><span class="line">grub&gt; setup (hd0)             # 重新安装grub启动程序</span><br><span class="line">setup (hd0)</span><br><span class="line"> Checking if "/boot/grub/stage1" exists... no</span><br><span class="line"> Checking if "/grub/stage1" exists... yes</span><br><span class="line"> Checking if "/grub/stage2" exists... yes</span><br><span class="line"> Checking if "/grub/e2fs_stage1_5" exists... yes</span><br><span class="line"> Running "embed /grub/e2fs_stage1_5 (hd0)"...  27 sectors are embedded.</span><br><span class="line">succeeded</span><br><span class="line"> Running "install /grub/stage1 (hd0) (hd0)1+27 p (hd0,0)/grub/stage2 /grub/grub.conf"... succeeded</span><br><span class="line">Done.</span><br><span class="line">grub&gt; quit</span><br><span class="line">quit</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>(5). &nbsp;重启系统&nbsp;&nbsp;&nbsp;# 如果重启报错可尝试 reboot -f 强制重启</p>
+</blockquote>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[root@boot_test ~]# reboot</span><br><span class="line">shutdown: Unable to shutdown system</span><br><span class="line">[root@boot_test ~]# </span><br><span class="line">Broadcast message from root@boot_test</span><br><span class="line">	(/dev/pts/0) at 12:12 ...</span><br><span class="line"></span><br><span class="line">The system is going down for reboot NOW!</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>(6). &nbsp;选择硬盘启动，F10保存退出<br><img src="https://github.com/spirit1234/blog_image/blob/master/image/boot/BIOS-1.png?raw=true" alt="enter image description here"></p>
+</blockquote>
+<blockquote>
+<p>(7). &nbsp;找到/boot分区为 (hd0,0)<br><img src="https://github.com/spirit1234/blog_image/blob/master/image/boot/grub.png?raw=true" alt="enter image description here"></p>
+</blockquote>
+<blockquote>
+<p>(8). &nbsp;指定boot，kernel，initrid以准备启动系统<br><img src="https://github.com/spirit1234/blog_image/blob/master/image/boot/boot.png?raw=true" alt="enter image description here"></p>
+</blockquote>
+<blockquote>
+<p>(9). &nbsp;输入boot启动系统，修改grub.conf配置文件</p>
+</blockquote>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[root@boot_test ~]# vim /boot/grub/grub.conf</span><br><span class="line">default=0     //默认菜单为第一个</span><br><span class="line">timeout=5     //等待时间为5秒</span><br><span class="line">title centos  //启动标题为centos</span><br><span class="line">root (hd0，0) //boot所在分区为/dev/sda1</span><br><span class="line">kernel /vmlinuz-2.6.32-642.el6.x86_64 ro root=/dev/sda3 rhgb quiet</span><br><span class="line">//kernel所在位置以只读模式挂载/dev/sda3根分区rhgb quiet为安静模式不显示内核信息。</span><br><span class="line">initrd /initramfs-2.6.32-642.el6.x86_64.img     //加载initrd镜像。</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>(10). &nbsp;最后重启系统即可恢复正常</p>
+</blockquote>
+
+            <!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->
+            <audio id="audio" loop="1" preload="auto" controls="controls" data-autoplay="true">
+                <source type="audio/mpeg" src>
+            </audio>
+            
+                <ul id="audio-list" style="display:none">
+                    
+                        <li title="0" data-url="https://s128.xiami.net/201/77201/406532/1769819218_1521686104164.mp3?ccode=xiami_web_web&expire=86400&duration=130&psid=b95f442261cbe8522df9deca50624214&ups_client_netip=111.43.18.166&ups_ts=1556076734&ups_userid=0&utid=mBNBEweKPCoCActaiYu7zbUg&vid=1769819218&fn=1769819218_1521686104164.mp3&vkey=B60b72735a32e25f41641d62a4440edb9"></li>
+                    
+                        <li title="1" data-url="http://win.web.rf03.sycdn.kuwo.cn/62820dc18e8bbedf52bacb4cf80e6de3/5cbfd974/resource/a2/25/46/387788257.aac"></li>
+                    
+                </ul>
+            
+        </div>
+        
+    <div id="gitalk-container" class="comment link" data-ae="false" data-ci data-cs data-r data-o data-a data-d="false">查看评论</div>
+
+
+    </div>
+    
+</div>
+
+
+    </div>
+</div>
+</body>
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script src="//lib.baomitu.com/jquery/1.8.3/jquery.min.js"></script>
+<script src="/js/plugin.js"></script>
+<script src="/js/diaspora.js"></script>
+<link rel="stylesheet" href="/photoswipe/photoswipe.css">
+<link rel="stylesheet" href="/photoswipe/default-skin/default-skin.css">
+<script src="/photoswipe/photoswipe.min.js"></script>
+<script src="/photoswipe/photoswipe-ui-default.min.js"></script>
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+            <div class="pswp__top-bar">
+                <!--  Controls are self-explanatory. Order can be changed. -->
+                <div class="pswp__counter"></div>
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                      <div class="pswp__preloader__cut">
+                        <div class="pswp__preloader__donut"></div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div> 
+            </div>
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+</html>
