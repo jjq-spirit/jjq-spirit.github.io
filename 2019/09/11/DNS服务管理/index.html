@@ -1,0 +1,399 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hans" class="loading">
+<head><meta name="generator" content="Hexo 3.8.0">
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DNS服务管理 - 夜飘凌的博客</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="google" content="notranslate">
+    <meta name="keywords" content="linux,"> 
+    <meta name="description" content="星夜，终究不胜寒凉。,DNS服务管理一. 简介1.1  DNS&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;域名系统（英文：Domain Name System，缩写：DNS）是互联网的一项服务。&amp;nbsp;&amp;nbsp,"> 
+    <meta name="author" content="Night"> 
+    <link rel="alternative" href="atom.xml" title="夜飘凌的博客" type="application/atom+xml"> 
+    <link rel="icon" href="/img/night.png"> 
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+    <link rel="stylesheet" href="/css/diaspora.css">
+    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({
+              google_ad_client: "ca-pub-8691406134231910",
+              enable_page_level_ads: true
+         });
+    </script>
+    <script async custom-element="amp-auto-ads" src="https://cdn.ampproject.org/v0/amp-auto-ads-0.1.js">
+    </script>
+</head>
+</html>
+<body class="loading">
+    <span id="config-title" style="display:none">夜飘凌的博客</span>
+    <div id="loader"></div>
+    <div id="single">
+    <div id="top" style="display: block;">
+    <div class="bar" style="width: 0;"></div>
+    <a class="icon-home image-icon" href="javascript:;" data-url="https://jjq-spirit.github.com"></a>
+    <div title="播放/暂停" class="icon-play"></div>
+    <h3 class="subtitle">DNS服务管理</h3>
+    <div class="social">
+        <!--<div class="like-icon">-->
+            <!--<a href="javascript:;" class="likeThis active"><span class="icon-like"></span><span class="count">76</span></a>-->
+        <!--</div>-->
+        <div>
+            <div class="share">
+                <a title="获取二维码" class="icon-scan" href="javascript:;"></a>
+            </div>
+            <div id="qr"></div>
+        </div>
+    </div>
+    <div class="scrollbar"></div>
+</div>
+
+    <div class="section">
+        <div class="article">
+    <div class="main">
+        <h1 class="title">DNS服务管理</h1>
+        <div class="stuff">
+            <span>九月 11, 2019</span>
+            
+
+        </div>
+        <div class="content markdown">
+            <h1 id="DNS服务管理"><a href="#DNS服务管理" class="headerlink" title="DNS服务管理"></a>DNS服务管理</h1><h2 id="一-简介"><a href="#一-简介" class="headerlink" title="一. 简介"></a>一. 简介</h2><h3 id="1-1-DNS"><a href="#1-1-DNS" class="headerlink" title="1.1  DNS"></a><strong>1.1  DNS</strong></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;域名系统（英文：Domain Name System，缩写：DNS）是互联网的一项服务。<br>&nbsp;&nbsp;&nbsp;&nbsp;人的记忆是有限的，如果单记IP地址非常困难。DNS之前，可以写入host文件，但是却有致命的缺陷（大量数据存储文本的打开速率），于是DNS域名系统横空出世。通过递归和迭代的方式解析域名与IP地址的对应关系。</p>
+<h3 id="1-2-使用端口及协议"><a href="#1-2-使用端口及协议" class="headerlink" title="1.2 使用端口及协议"></a><strong>1.2 使用端口及协议</strong></h3><p>&nbsp;&nbsp;&nbsp;&nbsp;使用53端口，UDP协议。有时会转成TCP协议，比如DNS主从同步时。</p>
+<h2 id="二-原理"><a href="#二-原理" class="headerlink" title="二. 原理"></a>二. 原理</h2><p>&nbsp;&nbsp;&nbsp;&nbsp;正向解析和反向解析。顾名思义，正向解析（<strong>A</strong>）是域名转换成IP的过程，反向解析（<strong>PTR</strong>）是IP转换成域名的过程。一般只有邮件服务利用反向域名解析来过滤垃圾邮件。<br>&nbsp;&nbsp;&nbsp;&nbsp;两种两种查询方式：<strong>递归查询</strong>和<strong>迭代查询</strong>。<br>&nbsp;&nbsp;&nbsp;&nbsp;递归查询：直接返回数据。<br>&nbsp;&nbsp;&nbsp;&nbsp;迭代查询：返回数据的近似值。</p>
+<h2 id="三-示意图"><a href="#三-示意图" class="headerlink" title="三. 示意图"></a>三. 示意图</h2><p><img src="https://raw.githubusercontent.com/spirit1234/blog_image/master/image/dns/360%E6%88%AA%E5%9B%BE18220208526650.png" alt="enter image description here"></p>
+<h2 id="四-服务搭建"><a href="#四-服务搭建" class="headerlink" title="四. 服务搭建"></a>四. 服务搭建</h2><h3 id="4-1-基本服务搭建"><a href="#4-1-基本服务搭建" class="headerlink" title="4.1 基本服务搭建"></a>4.1 基本服务搭建</h3><h4 id="4-1-1-实验环境"><a href="#4-1-1-实验环境" class="headerlink" title="4.1.1 实验环境"></a>4.1.1 实验环境</h4><table>
+<thead>
+<tr>
+<th>机器</th>
+<th>master</th>
+<th>slave1</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>作用</td>
+<td>DNS服务器</td>
+<td>客户测试机</td>
+</tr>
+<tr>
+<td>IP地址</td>
+<td>192.168.32.80</td>
+<td>192.168.32.81</td>
+</tr>
+</tbody>
+</table>
+<h4 id="4-1-2-Master安装配置DNS服务"><a href="#4-1-2-Master安装配置DNS服务" class="headerlink" title="4.1.2 Master安装配置DNS服务"></a>4.1.2 Master安装配置DNS服务</h4><blockquote>
+<p><strong>1. 安装bind包（注意，不是包名和服务名不一致）</strong></p>
+</blockquote>
+<p>[root@master ~]# yum install -y bind</p>
+<blockquote>
+<p><strong>2. 修改配置文件</strong></p>
+</blockquote>
+<p>[root@master ~]# vim /etc/named.conf<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">options &#123;</span><br><span class="line">        listen-on port 53 &#123; any; &#125;;    # 默认ipv4监听端口为53</span><br><span class="line">        listen-on-v6 port 53 &#123; ::1; &#125;;  # 默认ipv6监听端口为53</span><br><span class="line">        directory       &quot;/var/named&quot;;   # 主机记录文件存放目录</span><br><span class="line">        dump-file       &quot;/var/named/data/cache_dump.db&quot;;   # 缓存数据文件位置</span><br><span class="line">        statistics-file &quot;/var/named/data/named_stats.txt&quot;;     # 收集在服务器所有域的统计数据</span><br><span class="line">        memstatistics-file &quot;/var/named/data/named_mem_stats.txt&quot;; # 内存文件</span><br><span class="line">        allow-query     &#123; any; &#125;;   # 允许被搜寻使用，默认为自己，这里改成any</span><br><span class="line">        recursion yes;</span><br><span class="line"></span><br><span class="line">        dnssec-enable yes;</span><br><span class="line">        dnssec-validation yes;</span><br><span class="line"></span><br><span class="line">        /* Path to ISC DLV key */</span><br><span class="line">        bindkeys-file &quot;/etc/named.iscdlv.key&quot;;</span><br><span class="line"></span><br><span class="line">        managed-keys-directory &quot;/var/named/dynamic&quot;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">logging &#123;</span><br><span class="line">        channel default_debug &#123;</span><br><span class="line">                file &quot;data/named.run&quot;;</span><br><span class="line">                severity dynamic;</span><br><span class="line">        &#125;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">zone &quot;.&quot; IN &#123;                 # 定义根域</span><br><span class="line">        type hint;</span><br><span class="line">        file &quot;named.ca&quot;;   # 根域ip文件</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">include &quot;/etc/named.rfc1912.zones&quot;;    # 指定zone文件</span><br><span class="line">include &quot;/etc/named.root.key&quot;;</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p><strong>3. 修改zone文件</strong></p>
+</blockquote>
+<p>[root@master ~]# vim /etc/named.rfc1912.zones<br>将重复的删除，只留一个正向解析，一个反向解析。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">    zone &quot;jjq.com&quot; IN &#123;    # 自定义域名</span><br><span class="line">        type master;         # 类型为master（主）</span><br><span class="line">        file &quot;jjq.com.zone&quot;;   # 主机记录文件 /var/named/jjq.com.zone</span><br><span class="line">        allow-update &#123; none; &#125;;   # 不允许更新</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">zone &quot;32.168.192.in-addr.arpa&quot; IN &#123;    # 反向解析  （注意反着写IP）</span><br><span class="line">        type master;                # 类型为master（主DNS）</span><br><span class="line">        file &quot;192.168.32.zone&quot;;   # 反向解析记录文件 /var/named/192.168.32.zone</span><br><span class="line">        allow-update &#123; none; &#125;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p><strong>4. 写入正向解析A记录</strong></p>
+</blockquote>
+<p>[root@master ~]# cp -p /var/named/named.localhost /var/named/jjq.com.zone</p>
+<p><font style="color:red;">注意！！ 这里默认属组为named，所以拷贝模板时需要将权限也拷贝过去。</font><br>[root@master ~]# vim /var/named/jjq.com.zone<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">$TTL 1D</span><br><span class="line">@       IN SOA  jjq.com. rname.invalid. (      # 注意尾部要加.代表根域服务器</span><br><span class="line">                                        0       ; serial</span><br><span class="line">                                        1D      ; refresh</span><br><span class="line">                                        1H      ; retry</span><br><span class="line">                                        1W      ; expire</span><br><span class="line">                                        3H )    ; minimum</span><br><span class="line">        NS      dns.jjq.com.       # 名称服务器</span><br><span class="line">dns    A   192.168.32.81</span><br><span class="line">www    A  192.168.32.80</span><br><span class="line">github  A  192.168.32.80</span><br><span class="line">shen     A  192.168.32.81</span><br><span class="line">    *       A  192.168.1.119      #  *代表所有</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p><strong>5. 写入反向解析PTR记录</strong></p>
+</blockquote>
+<p>[root@master ~]# cp -p /var/named/named.loopback /var/named/192.168.32.zone<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$TTL 1D</span><br><span class="line">@       IN SOA  jjq.com. rname.invalid. (</span><br><span class="line">                                        0       ; serial</span><br><span class="line">                                        1D      ; refresh</span><br><span class="line">                                        1H      ; retry</span><br><span class="line">                                        1W      ; expire</span><br><span class="line">                                        3H )    ; minimum</span><br><span class="line">        NS      dns.jjq.com.</span><br><span class="line">80     PTR  www</span><br><span class="line">80     PTR  github</span><br><span class="line">81    PTR  shen</span><br><span class="line">81   PTR dns</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p><strong>6. 重启DNS服务</strong></p>
+</blockquote>
+<p>[root@master ~]# service named restart<br>停止 named：.                                              [确定]<br>启动 named：                                               [确定]</p>
+<h4 id="4-1-3-Slave1测试验证"><a href="#4-1-3-Slave1测试验证" class="headerlink" title="4.1.3 Slave1测试验证"></a>4.1.3 Slave1测试验证</h4><blockquote>
+<p><strong>1. 编辑网卡配置文件</strong></p>
+</blockquote>
+<p>[root@slave1 ~]# vim /etc/sysconfig/network-scripts/ifcfg-eth0<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">DEVICE=eth0</span><br><span class="line">TYPE=Ethernet</span><br><span class="line">UUID=021f0b15-fc52-4e9f-912f-4bf79963fab5</span><br><span class="line">ONBOOT=yes</span><br><span class="line">NM_CONTROLLED=yes</span><br><span class="line">BOOTPROTO=none</span><br><span class="line">HWADDR=00:0C:29:B1:18:8D</span><br><span class="line">IPADDR=192.168.32.81</span><br><span class="line">PREFIX=24</span><br><span class="line">DNS1=192.168.32.80     # DNS指向服务器</span><br><span class="line">DEFROUTE=yes</span><br><span class="line">IPV4_FAILURE_FATAL=yes</span><br><span class="line">IPV6INIT=no</span><br><span class="line">NAME=&quot;System eth0&quot;</span><br></pre></td></tr></table></figure></p>
+<p>配置完重启网卡</p>
+<blockquote>
+<p><strong>2. nslookup测试</strong><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">[root@slave1 ~]# nslookup </span><br><span class="line">&gt; www.jjq.com</span><br><span class="line">Server:		192.168.32.80</span><br><span class="line">Address:	192.168.32.80#53</span><br><span class="line"></span><br><span class="line">Name:	www.jjq.com</span><br><span class="line">Address: 192.168.32.80</span><br><span class="line">&gt; dns.jjq.com</span><br><span class="line">Server:		192.168.32.80</span><br><span class="line">Address:	192.168.32.80#53</span><br><span class="line"></span><br><span class="line">Name:	dns.jjq.com</span><br><span class="line">Address: 192.168.32.81</span><br><span class="line">&gt; asfsdafdsac.jjq.com</span><br><span class="line">Server:		192.168.32.80</span><br><span class="line">Address:	192.168.32.80#53</span><br><span class="line"></span><br><span class="line">Name:	asfsdafdsac.jjq.com</span><br><span class="line">Address: 192.168.1.119</span><br><span class="line">&gt; github.jjq.com</span><br><span class="line">Server:		192.168.32.80</span><br><span class="line">Address:	192.168.32.80#53</span><br><span class="line"></span><br><span class="line">Name:	github.jjq.com</span><br><span class="line">Address: 192.168.32.80</span><br><span class="line">&gt; 192.168.32.80</span><br><span class="line">Server:		192.168.32.80</span><br><span class="line">Address:	192.168.32.80#53</span><br><span class="line"></span><br><span class="line">80.32.168.192.in-addr.arpa	name = www.32.168.192.in-addr.arpa.</span><br><span class="line">80.32.168.192.in-addr.arpa	name = github.32.168.192.in-addr.arpa.</span><br><span class="line">&gt; 192.168.32.81</span><br><span class="line">Server:		192.168.32.80</span><br><span class="line">Address:	192.168.32.80#53</span><br><span class="line"></span><br><span class="line">81.32.168.192.in-addr.arpa	name = dns.32.168.192.in-addr.arpa.</span><br><span class="line">81.32.168.192.in-addr.arpa	name = shen.32.168.192.in-addr.arpa.</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<h3 id="4-2-DNS主从同步"><a href="#4-2-DNS主从同步" class="headerlink" title="4.2 DNS主从同步"></a>4.2 DNS主从同步</h3><h4 id="4-2-1-实验环境"><a href="#4-2-1-实验环境" class="headerlink" title="4.2.1 实验环境"></a>4.2.1 实验环境</h4><table>
+<thead>
+<tr>
+<th>机器</th>
+<th>Master</th>
+<th>slave1</th>
+<th>Client</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>作用</td>
+<td>&nbsp;&emsp;主DNS</td>
+<td>&nbsp;&emsp;&nbsp;&nbsp;从DNS</td>
+<td>&nbsp;&emsp;客户测试</td>
+</tr>
+<tr>
+<td>IP</td>
+<td>192.168.32.80</td>
+<td>192.168.32.81</td>
+<td>192.168.32.82</td>
+</tr>
+</tbody>
+</table>
+<h4 id="4-2-2-Master配置主DNS"><a href="#4-2-2-Master配置主DNS" class="headerlink" title="4.2.2 Master配置主DNS"></a>4.2.2 Master配置主DNS</h4><blockquote>
+<p><strong>1. 安装bind包</strong></p>
+</blockquote>
+<p>[root@master ~]# yum install -y bind</p>
+<blockquote>
+<p><strong>2. 修改主配置文件</strong></p>
+</blockquote>
+<p>[root@master ~]# vim /etc/named.conf<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">11         listen-on port 53 &#123; any; &#125;; </span><br><span class="line">17         allow-query     &#123; any; &#125;;</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p><strong>3. 修改区域配置文件</strong></p>
+</blockquote>
+<p>[root@master ~]# vim /etc/named.rfc1912.zones<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">zone &quot;jjq.com&quot; IN &#123;</span><br><span class="line">        allow-transfer &#123; 192.168.32.81;  &#125;;  # 允许从服务器的IP</span><br><span class="line">        type master;</span><br><span class="line">        file &quot;jjq.com.zone&quot;;</span><br><span class="line">        allow-update &#123; none; &#125;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">zone &quot;32.168.192.in-addr.arpa&quot; IN &#123;</span><br><span class="line">        allow-transfer &#123; 192.168.32.81; &#125;;</span><br><span class="line">        type master;</span><br><span class="line">        file &quot;192.168.32.arpa&quot;;</span><br><span class="line">        allow-update &#123; none; &#125;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p><strong>4. 修改正向反向文件</strong></p>
+</blockquote>
+<p>[root@master ~]# cp -a /var/named/named.localhost /var/named/jjq.com.zone<br>[root@master ~]# cp -a /var/named/named.loopback /var/named/192.168.32.arpa<br>[root@master ~]# vim /var/named/jjq.com.zone<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$TTL 1D</span><br><span class="line">@       IN SOA  jjq.com. rname.invalid. (</span><br><span class="line">                                        0       ; serial</span><br><span class="line">                                        1D      ; refresh</span><br><span class="line">                                        1H      ; retry</span><br><span class="line">                                        1W      ; expire</span><br><span class="line">                                        3H )    ; minimum</span><br><span class="line">        NS      dns.jjq.com.</span><br><span class="line">dns     A       192.168.32.80</span><br><span class="line">www     A       192.168.32.81</span><br></pre></td></tr></table></figure></p>
+<p>[root@master ~]# vim /var/named/192.168.32.arpa<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$TTL 1D</span><br><span class="line">@       IN SOA  jjq.com. rname.invalid. (</span><br><span class="line">                                        0       ; serial</span><br><span class="line">                                        1D      ; refresh</span><br><span class="line">                                        1H      ; retry</span><br><span class="line">                                        1W      ; expire</span><br><span class="line">                                        3H )    ; minimum</span><br><span class="line">        NS      dns.jjq.com.</span><br><span class="line">80      PTR     dns.jjq.com.</span><br><span class="line">81      PTR     www.jjq.com.</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p><strong>5.重启主DNS服务器</strong></p>
+</blockquote>
+<p>[root@master ~]# service named restart<br>停止 named：                                               [确定]<br>Generating /etc/rndc.key:                                  [确定]<br>启动 named：                                               [确定]</p>
+<h4 id="4-2-3-配置从DNS服务器"><a href="#4-2-3-配置从DNS服务器" class="headerlink" title="4.2.3 配置从DNS服务器"></a>4.2.3 配置从DNS服务器</h4><blockquote>
+<p><strong>1. 安装bind包</strong></p>
+</blockquote>
+<p>[root@slave1 ~]# yum install -y bind</p>
+<blockquote>
+<p><strong>2. 修改dns配置文件</strong></p>
+</blockquote>
+<p>[root@slave1 ~]# vim /etc/named.conf<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">11         listen-on port 53 &#123; any; &#125;;</span><br><span class="line">17         allow-query     &#123; any; &#125;;</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p><strong>3. 修改区域配置文件</strong></p>
+</blockquote>
+<p>[root@slave1 ~]# vim /etc/named.rfc1912.zones<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">zone &quot;jjq.com&quot; IN &#123;</span><br><span class="line">        type slave;</span><br><span class="line">        file &quot;slaves/jjq.com.zone&quot;;</span><br><span class="line">        allow-update &#123; none; &#125;;</span><br><span class="line">        masters &#123; 192.168.32.80; &#125;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">zone &quot;32.168.192.in-addr.arpa&quot; IN &#123;</span><br><span class="line">        type slave;</span><br><span class="line">        file &quot;slaves/192.168.32.arpa&quot;;</span><br><span class="line">        allow-update &#123; none; &#125;;</span><br><span class="line">        masters &#123; 192.168.32.80; &#125;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p><strong>4. 重启从DNS服务</strong></p>
+</blockquote>
+<p>[root@slave1 ~]# service named restart<br>停止 named：                                               [确定]<br>Generating /etc/rndc.key:                                  [确定]<br>启动 named：                                               [确定]</p>
+<h4 id="4-2-4-配置Client进行测试"><a href="#4-2-4-配置Client进行测试" class="headerlink" title="4.2.4 配置Client进行测试"></a>4.2.4 配置Client进行测试</h4><blockquote>
+<p><strong>1. 配置从DNS写入网卡文件</strong></p>
+</blockquote>
+<p>[root@client ~]# echo “DNS1=192.168.32.81” &gt;&gt; /etc/sysconfig/network-scripts/ifcfg-eth0<br>[root@client ~]# service network restart</p>
+<blockquote>
+<p><strong>2. 测试</strong><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">[root@client ~]# nslookup </span><br><span class="line">&gt; www.jjq.com</span><br><span class="line">Server:		192.168.32.81</span><br><span class="line">Address:	192.168.32.81#53</span><br><span class="line"></span><br><span class="line">Name:	www.jjq.com</span><br><span class="line">Address: 192.168.32.81</span><br><span class="line">&gt; dns.jjq.com</span><br><span class="line">Server:		192.168.32.81</span><br><span class="line">Address:	192.168.32.81#53</span><br><span class="line"></span><br><span class="line">Name:	dns.jjq.com</span><br><span class="line">Address: 192.168.32.80</span><br><span class="line">&gt; 192.168.32.80</span><br><span class="line">Server:		192.168.32.81</span><br><span class="line">Address:	192.168.32.81#53</span><br><span class="line"></span><br><span class="line">80.32.168.192.in-addr.arpa	name = dns.jjq.com.</span><br><span class="line">&gt; 192.168.32.81</span><br><span class="line">Server:		192.168.32.81</span><br><span class="line">Address:	192.168.32.81#53</span><br><span class="line"></span><br><span class="line">81.32.168.192.in-addr.arpa	name = www.jjq.com.</span><br></pre></td></tr></table></figure></p>
+</blockquote>
+<h3 id="4-3-DNS缓存服务器"><a href="#4-3-DNS缓存服务器" class="headerlink" title="4.3 DNS缓存服务器"></a>4.3 DNS缓存服务器</h3><h4 id="4-3-1-概述"><a href="#4-3-1-概述" class="headerlink" title="4.3.1 概述"></a>4.3.1 概述</h4><p>&nbsp;&emsp;当搭建完DNS服务器后会出现这样的问题，如果有大量的访问量，DNS服务器压力将会非常巨大。那么就需要一台DNS缓存服务器，它的作用是将常用的域名地址记录到缓存服务器上，当用户再次访问时，不用再去访问DNS服务器，直接从缓存服务器中读取主机记录，大大降低了DNS服务器的访问压力，实现了二八原则。（20%的资源，解决80%的访问）</p>
+<h4 id="4-3-2-实验环境"><a href="#4-3-2-实验环境" class="headerlink" title="4.3.2 实验环境"></a>4.3.2 实验环境</h4><table>
+<thead>
+<tr>
+<th>机器</th>
+<th>Master</th>
+<th>Slave1</th>
+<th>Cache</th>
+<th>Client</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>作用</td>
+<td>&nbsp;&emsp;主DNS</td>
+<td>&nbsp;&emsp;从DNS</td>
+<td>&nbsp;&emsp;缓存服务器</td>
+<td>&nbsp;&emsp;客户测试</td>
+</tr>
+<tr>
+<td>IP地址</td>
+<td>192.168.32.80</td>
+<td>192.168.32.81</td>
+<td>192.168.32.82</td>
+<td>192.168.32.83</td>
+</tr>
+</tbody>
+</table>
+<h4 id="4-3-3-搭建缓存服务"><a href="#4-3-3-搭建缓存服务" class="headerlink" title="4.3.3 搭建缓存服务"></a>4.3.3 搭建缓存服务</h4><blockquote>
+<p><strong>1. 安装dnsmasq（缓存DNS安装包）</strong></p>
+</blockquote>
+<p>这里直接接着主从服务器做…<br>[root@cache ~]# yum install -y dnsmasq</p>
+<blockquote>
+<p><strong>2. 修改缓存配置文件</strong></p>
+</blockquote>
+<p>[root@cache ~]# vim /etc/dnsmasq.conf<br>[root@cache ~]# cat /etc/dnsmasq.conf | grep -v “^$” | grep -v “^#”<br>server=192.168.32.81<br>domain=jjq.com<br>cache-size=150</p>
+<blockquote>
+<p><strong>3. 重启缓存服务</strong></p>
+</blockquote>
+<p>[root@cache ~]# /etc/init.d/dnsmasq restart<br>dnsdomainname: 未知的主机<br>dnsdomainname: 未知的主机</p>
+<p>dnsdomainname: 未知的主机<br>Starting dnsmasq:                                          [确定]</p>
+<h4 id="4-3-4-Cient测试"><a href="#4-3-4-Cient测试" class="headerlink" title="4.3.4 Cient测试"></a>4.3.4 Cient测试</h4><blockquote>
+<p><strong>1. 配置Cient网卡</strong></p>
+</blockquote>
+<p>[root@client ~]# echo “DNS1=192.168.32.82” &gt;&gt; /etc/sysconfig/network-scripts/ifcfg-ens33<br>[root@client ~]# systemctl restart network</p>
+<blockquote>
+<p><strong>2. dig解析查看速度</strong></p>
+</blockquote>
+<p>[root@client ~]# dig <a href="http://www.jjq.com" target="_blank" rel="noopener">www.jjq.com</a></p>
+<p>; &lt;&lt;&gt;&gt; DiG 9.9.4-RedHat-9.9.4-50.el7 &lt;&lt;&gt;&gt; <a href="http://www.jjq.com" target="_blank" rel="noopener">www.jjq.com</a><br>;; global options: +cmd<br>;; Got answer:<br>;; -&gt;&gt;HEADER&lt;&lt;- opcode: QUERY, status: NOERROR, id: 54694<br>;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 1, ADDITIONAL: 2</p>
+<p>;; OPT PSEUDOSECTION:<br>; EDNS: version: 0, flags:; udp: 1280<br>;; QUESTION SECTION:<br>;<a href="http://www.jjq.com" target="_blank" rel="noopener">www.jjq.com</a>.            IN    A</p>
+<p>;; ANSWER SECTION:<br><a href="http://www.jjq.com" target="_blank" rel="noopener">www.jjq.com</a>.        86400    IN    A    192.168.32.81</p>
+<p>;; AUTHORITY SECTION:<br>jjq.com.        86400    IN    NS    dns.jjq.com.</p>
+<p>;; ADDITIONAL SECTION:<br>dns.jjq.com.        86400    IN    A    192.168.32.80</p>
+<p>;; <font style="background-color:red">&nbsp;Query time: 2 msec</font><br>;; SERVER: 192.168.32.82#53(192.168.32.82)<br>;; WHEN: Wed Sep 11 20:24:03 CST 2019<br>;; MSG SIZE  rcvd: 90<br>++++++++++++++++++++++++++++++++++++++++++++++++++<br>[root@client ~]# dig <a href="http://www.jjq.com" target="_blank" rel="noopener">www.jjq.com</a></p>
+<p>; &lt;&lt;&gt;&gt; DiG 9.9.4-RedHat-9.9.4-50.el7 &lt;&lt;&gt;&gt; <a href="http://www.jjq.com" target="_blank" rel="noopener">www.jjq.com</a><br>;; global options: +cmd<br>;; Got answer:<br>;; -&gt;&gt;HEADER&lt;&lt;- opcode: QUERY, status: NOERROR, id: 40059<br>;; flags: qr rd ra ad; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 0</p>
+<p>;; QUESTION SECTION:<br>;<a href="http://www.jjq.com" target="_blank" rel="noopener">www.jjq.com</a>.            IN    A</p>
+<p>;; ANSWER SECTION:<br><a href="http://www.jjq.com" target="_blank" rel="noopener">www.jjq.com</a>.        86201    IN    A    192.168.32.81</p>
+<p>;; <font style="background-color:green">&nbsp;Query time: 0 msec</font><br>;; SERVER: 192.168.32.82#53(192.168.32.82)<br>;; WHEN: Wed Sep 11 20:27:23 CST 2019<br>;; MSG SIZE  rcvd: 45</p>
+<hr>
+<h3 id="4-4-DNS分离解析"><a href="#4-4-DNS分离解析" class="headerlink" title="4.4 DNS分离解析"></a>4.4 DNS分离解析</h3><h4 id="4-4-1-概述"><a href="#4-4-1-概述" class="headerlink" title="4.4.1 概述"></a>4.4.1 概述</h4><p>&nbsp;&emsp;实际生活中会出现这样的情况，一个内网的用户和一个外网的用户。当需要访问内网中的DNS服务器时，内网的用户会经过路由器然后重新进入内网访问DNS服务器，外网用户也会通过路由器进入内网访问DNS服务器，这样路由器的压力会骤然增大。为了防止这样的事情发生，可让DNS做分离解析，内网的用户不必通过路由器再返回内网。<br>&nbsp;&emsp;或者第二种情况，电信和联通的用户，当同时访问DNS服务器时，速度肯定是不一样的，为了解决这种问题，应该通过DNS分离解析来解决此问题，电信的IP走电信的服务器，联通用户IP走联通DNS服务器，将会大大提升速度。</p>
+<h4 id="4-4-2-实验环境"><a href="#4-4-2-实验环境" class="headerlink" title="4.4.2 实验环境"></a>4.4.2 实验环境</h4><table>
+<thead>
+<tr>
+<th>机器</th>
+<th>Maser</th>
+<th>Client1</th>
+<th>Client2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>作用</td>
+<td>&nbsp;&emsp;智能DNS服务器</td>
+<td>&nbsp;&emsp;模拟内网用户</td>
+<td>&nbsp;&emsp;模拟外网用户</td>
+</tr>
+<tr>
+<td>&nbsp;&nbsp;IP</td>
+<td>$vm1&nbsp;192.168.32.80<br>vm2 10.10.10.80$</td>
+<td>vm1 192.168.32.81</td>
+<td>vm2 10.10.10.82</td>
+</tr>
+</tbody>
+</table>
+<h4 id="4-4-3-搭建智能DNS服务"><a href="#4-4-3-搭建智能DNS服务" class="headerlink" title="4.4.3 搭建智能DNS服务"></a>4.4.3 搭建智能DNS服务</h4><blockquote>
+<p><strong>1. 安装bind软件包</strong></p>
+</blockquote>
+<p>[root@master ~]# yum install -y bind</p>
+<blockquote>
+<p><strong>2. 修改主配置文件</strong></p>
+</blockquote>
+<p>[root@master ~]# vim /etc/named.conf<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">options &#123;</span><br><span class="line">        listen-on port 53 &#123; any; &#125;;</span><br><span class="line">        listen-on-v6 port 53 &#123; ::1; &#125;;</span><br><span class="line">        directory       &quot;/var/named&quot;;</span><br><span class="line">        dump-file       &quot;/var/named/data/cache_dump.db&quot;;</span><br><span class="line">        statistics-file &quot;/var/named/data/named_stats.txt&quot;;</span><br><span class="line">        memstatistics-file &quot;/var/named/data/named_mem_stats.txt&quot;;</span><br><span class="line">        allow-query     &#123; any; &#125;;</span><br><span class="line">        recursion yes;</span><br><span class="line"></span><br><span class="line">        dnssec-enable yes;</span><br><span class="line">        dnssec-validation yes;</span><br><span class="line"></span><br><span class="line">        /* Path to ISC DLV key */</span><br><span class="line">        bindkeys-file &quot;/etc/named.iscdlv.key&quot;;</span><br><span class="line"></span><br><span class="line">        managed-keys-directory &quot;/var/named/dynamic&quot;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">logging &#123;</span><br><span class="line">        channel default_debug &#123;</span><br><span class="line">                file &quot;data/named.run&quot;;</span><br><span class="line">                severity dynamic;</span><br><span class="line">        &#125;;</span><br><span class="line">&#125;;</span><br><span class="line">view a &#123;</span><br><span class="line">    match-clients &#123; 192.168.32.0/24; &#125;;</span><br><span class="line">    zone &quot;.&quot; IN &#123;</span><br><span class="line">            type hint;</span><br><span class="line">            file &quot;named.ca&quot;;</span><br><span class="line">    &#125;;</span><br><span class="line">    include &quot;/etc/named.a&quot;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">view b &#123;</span><br><span class="line">    match-clients &#123; 10.10.10.0/24; &#125;;</span><br><span class="line">    zone &quot;.&quot; IN &#123;</span><br><span class="line">            type hint;</span><br><span class="line">            file &quot;named.ca&quot;;</span><br><span class="line">    &#125;;</span><br><span class="line">     include &quot;/etc/named.b&quot;;</span><br><span class="line">&#125;;</span><br><span class="line">include &quot;/etc/named.root.key&quot;;</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p><strong>3. 修改a视图的区域配置文件</strong></p>
+</blockquote>
+<p>[root@master ~]# cp -a /etc/named.rfc1912.zones /etc/named.a<br>[root@master ~]# vim !$<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">zone &quot;jjq.com&quot; IN &#123;</span><br><span class="line">        type master;</span><br><span class="line">        file &quot;jjq.com.a.zone&quot;;</span><br><span class="line">        allow-update &#123; none; &#125;;</span><br><span class="line">&#125;;      </span><br><span class="line"></span><br><span class="line">zone &quot;32.168.192.in-addr.arpa&quot; IN &#123;</span><br><span class="line">        type master;</span><br><span class="line">        file &quot;192.168.32.a.arpa&quot;;</span><br><span class="line">        allow-update &#123; none; &#125;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p><strong>4. 修改b视图的区域配置文件</strong></p>
+</blockquote>
+<p>[root@master ~]# cp -a /etc/named.rfc1912.zones /etc/named.b<br>[root@master ~]# vim !$<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">zone &quot;jjq.com&quot; IN &#123;</span><br><span class="line">        type master;</span><br><span class="line">        file &quot;jjq.com.b.zone&quot;;</span><br><span class="line">        allow-update &#123; none; &#125;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">zone &quot;10.10.10.in-addr.arpa&quot; IN &#123;</span><br><span class="line">        type master;</span><br><span class="line">        file &quot;10.10.10.b.arpa&quot;;</span><br><span class="line">        allow-update &#123; none; &#125;;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p><strong>5. 配置视图a的正向和反向解析</strong></p>
+</blockquote>
+<p>[root@master ~]# cp -a /var/named/named.localhost /var/named/jjq.com.a.zone<br>[root@master ~]# vim !$<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$TTL 1D</span><br><span class="line">@       IN SOA  jjq.com. rname.invalid. (</span><br><span class="line">                                        0       ; serial</span><br><span class="line">                                        1D      ; refresh</span><br><span class="line">                                        1H      ; retry</span><br><span class="line">                                        1W      ; expire</span><br><span class="line">                                        3H )    ; minimum</span><br><span class="line">        NS      dns.jjq.com.</span><br><span class="line">dns     A       192.168.32.80</span><br><span class="line">www     A       192.168.32.81</span><br></pre></td></tr></table></figure></p>
+<p>[root@master ~]# cp -a /var/named/named.loopback /var/named/192.168.32.a.arpa<br>[root@master ~]# vim !$<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$TTL 1D</span><br><span class="line">@       IN SOA  jjq.com. rname.invalid. (</span><br><span class="line">                                        0       ; serial</span><br><span class="line">                                        1D      ; refresh</span><br><span class="line">                                        1H      ; retry</span><br><span class="line">                                        1W      ; expire</span><br><span class="line">                                        3H )    ; minimum</span><br><span class="line">        NS      dns.jjq.com.</span><br><span class="line">80      PTR     dns.jjq.com.</span><br><span class="line">81      PTR     www.jjq.com.</span><br></pre></td></tr></table></figure></p>
+<blockquote>
+<p><strong>6. 配置及视图b的正向和反向解析</strong></p>
+</blockquote>
+<p>[root@master ~]# cp -a /var/named/jjq.com.a.zone /var/named/jjq.com.b.zone<br>[root@master ~]# vim !$<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$TTL 1D</span><br><span class="line">@       IN SOA  jjq.com. rname.invalid. (</span><br><span class="line">                                        0       ; serial</span><br><span class="line">                                        1D      ; refresh</span><br><span class="line">                                        1H      ; retry</span><br><span class="line">                                        1W      ; expire</span><br><span class="line">                                        3H )    ; minimum</span><br><span class="line">        NS      dns.jjq.com.</span><br><span class="line">dns     A       10.10.10.80</span><br><span class="line">www     A       10.10.10.81</span><br></pre></td></tr></table></figure></p>
+<p>[root@master ~]# cp -a /var/named/192.168.32.a.arpa /var/named/10.10.10.b.arpa</p>
+<blockquote>
+<p><strong>7. 重启DNS服务</strong></p>
+</blockquote>
+<p>[root@master ~]# service named restart<br>停止 named：                                               [确定]<br>启动 named：                                               [确定]</p>
+<h4 id="4-4-4-Client机器进行测试"><a href="#4-4-4-Client机器进行测试" class="headerlink" title="4.4.4 Client机器进行测试"></a>4.4.4 Client机器进行测试</h4><blockquote>
+<p><strong>1. 配置Client1机器</strong></p>
+</blockquote>
+<p>[root@client1 ~]# echo “DNS1=192.168.32.80” &gt;&gt; /etc/sysconfig/network-scripts/ifcfg-eth0<br>[root@client1 ~]# service network restart<br>正在关闭接口 eth0：                                        [确定]<br>正在关闭接口 eth1：                                        [确定]<br>关闭环回接口：                                             [确定]<br>弹出环回接口：                                             [确定]<br>弹出界面 eth0： Determining if ip address 192.168.32.81 is already in use for device eth0…<br>                                                           [确定]</p>
+<blockquote>
+<p><strong>2. 配置Client2机器</strong></p>
+</blockquote>
+<p>[root@client2 ~]# echo “DNS1=10.10.10.80” &gt;&gt; /etc/sysconfig/network-scripts/ifcfg-eth0<br>[root@client2 ~]# service network reload<br>正在关闭接口 eth0：                                        [确定]<br>正在关闭接口 eth1：                                        [确定]<br>关闭环回接口：                                             [确定]<br>弹出环回接口：                                             [确定]<br>弹出界面 eth0： Determining if ip address 10.10.10.82 is already in use for device eth0…<br>                                                           [确定]</p>
+<blockquote>
+<p><strong>3. Client1、Client2分别进行对比测试</strong></p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">[root@client1 ~]# nslookup </span><br><span class="line">&gt; www.jjq.com</span><br><span class="line">Server:		192.168.32.80</span><br><span class="line">Address:	192.168.32.80#53</span><br><span class="line"></span><br><span class="line">Name:	www.jjq.com</span><br><span class="line">Address: 192.168.32.81</span><br><span class="line">&gt; dns.jjq.com</span><br><span class="line">Server:		192.168.32.80</span><br><span class="line">Address:	192.168.32.80#53</span><br><span class="line"></span><br><span class="line">Name:	dns.jjq.com</span><br><span class="line">Address: 192.168.32.80</span><br><span class="line">&gt; 192.168.32.80</span><br><span class="line">Server:		192.168.32.80</span><br><span class="line">Address:	192.168.32.80#53</span><br><span class="line"></span><br><span class="line">80.32.168.192.in-addr.arpa	name = dns.jjq.com.</span><br><span class="line">&gt; 192.168.32.81</span><br><span class="line">Server:		192.168.32.80</span><br><span class="line">Address:	192.168.32.80#53</span><br><span class="line"></span><br><span class="line">81.32.168.192.in-addr.arpa	name = www.jjq.com.</span><br><span class="line"></span><br><span class="line">+++++++++++++++++++++++++++++++++</span><br><span class="line">  </span><br><span class="line">[root@client2 ~]# nslookup </span><br><span class="line">&gt; www.jjq.com</span><br><span class="line">Server:		10.10.10.80</span><br><span class="line">Address:	10.10.10.80#53</span><br><span class="line"></span><br><span class="line">Name:	www.jjq.com</span><br><span class="line">Address: 10.10.10.81</span><br><span class="line">&gt; dns.jjq.com</span><br><span class="line">Server:		10.10.10.80</span><br><span class="line">Address:	10.10.10.80#53</span><br><span class="line"></span><br><span class="line">Name:	dns.jjq.com</span><br><span class="line">Address: 10.10.10.80</span><br><span class="line">&gt; 10.10.10.80</span><br><span class="line">Server:		10.10.10.80</span><br><span class="line">Address:	10.10.10.80#53</span><br><span class="line"></span><br><span class="line">80.10.10.10.in-addr.arpa	name = dns.jjq.com.</span><br><span class="line">&gt; 10.10.10.81</span><br><span class="line">Server:		10.10.10.80</span><br><span class="line">Address:	10.10.10.80#53</span><br><span class="line"></span><br><span class="line">81.10.10.10.in-addr.arpa	name = www.jjq.com.</span><br></pre></td></tr></table></figure>
+<h2 id="五-小结"><a href="#五-小结" class="headerlink" title="五. 小结"></a>五. 小结</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">  实验中可能遇见的问题:</span><br><span class="line">     1. Error in named configuration:</span><br><span class="line">      zone jjq.com/IN: NS &apos;dns.jjq.com.jjq.com&apos; has no address records (A or AAAA)</span><br><span class="line">      zone jjq.com/IN: not loaded due to errors.</span><br><span class="line">      _default/jjq.com/IN: bad zone</span><br><span class="line">                                                                 [失败]</span><br><span class="line">  解决办法</span><br><span class="line">     修改主机记录文件，有可能没写根域的点</span><br><span class="line">     </span><br><span class="line">++++++++++++++++++++++++++++++++++++++++++++++++++     </span><br><span class="line">     </span><br><span class="line">     2. 配置DNS分离解析时遇到报错</span><br><span class="line">          [root@master ~]# service named restart</span><br><span class="line">          停止 named：                                               [确定]</span><br><span class="line">          启动 named：</span><br><span class="line">          Error in named configuration:</span><br><span class="line">          /etc/named.a:13: unknown option &apos;zone&apos;</span><br><span class="line">          /etc/named.a:21: unknown option &apos;zone&apos;</span><br><span class="line">          /etc/named.b:13: unknown option &apos;zone&apos;</span><br><span class="line">          /etc/named.b:20: unknown option &apos;zone&apos;</span><br><span class="line">                                                                     [失败]</span><br><span class="line">        解决办法：</span><br><span class="line">          这个问题找了好久，原来不是区域配置文件写错。而是主配置文件中include写错位置了，不应该写在zone括号里面，应该写在视图view里。</span><br></pre></td></tr></table></figure>
+            <!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->
+            <audio id="audio" loop="1" preload="auto" controls="controls" data-autoplay="true">
+                <source type="audio/mpeg" src="https://m801.music.126.net/20190912121101/dcd8dd4855f3e4220e004211273dde95/jdyyaac/040e/050f/0159/3de610d3ec2e14fa96a2638d9331d74f.m4a">
+            </audio>
+            
+        </div>
+        
+    <div id="gitalk-container" class="comment link" data-ae="false" data-ci data-cs data-r data-o data-a data-d="false">查看评论</div>
+
+
+    </div>
+    
+        <div class="side">
+            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#DNS服务管理"><span class="toc-text">DNS服务管理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#一-简介"><span class="toc-text">一. 简介</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-DNS"><span class="toc-text">1.1  DNS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-使用端口及协议"><span class="toc-text">1.2 使用端口及协议</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二-原理"><span class="toc-text">二. 原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三-示意图"><span class="toc-text">三. 示意图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#四-服务搭建"><span class="toc-text">四. 服务搭建</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-基本服务搭建"><span class="toc-text">4.1 基本服务搭建</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#4-1-1-实验环境"><span class="toc-text">4.1.1 实验环境</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-1-2-Master安装配置DNS服务"><span class="toc-text">4.1.2 Master安装配置DNS服务</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-1-3-Slave1测试验证"><span class="toc-text">4.1.3 Slave1测试验证</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-DNS主从同步"><span class="toc-text">4.2 DNS主从同步</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#4-2-1-实验环境"><span class="toc-text">4.2.1 实验环境</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-2-2-Master配置主DNS"><span class="toc-text">4.2.2 Master配置主DNS</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-2-3-配置从DNS服务器"><span class="toc-text">4.2.3 配置从DNS服务器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-2-4-配置Client进行测试"><span class="toc-text">4.2.4 配置Client进行测试</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-DNS缓存服务器"><span class="toc-text">4.3 DNS缓存服务器</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#4-3-1-概述"><span class="toc-text">4.3.1 概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-3-2-实验环境"><span class="toc-text">4.3.2 实验环境</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-3-3-搭建缓存服务"><span class="toc-text">4.3.3 搭建缓存服务</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-3-4-Cient测试"><span class="toc-text">4.3.4 Cient测试</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-DNS分离解析"><span class="toc-text">4.4 DNS分离解析</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#4-4-1-概述"><span class="toc-text">4.4.1 概述</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-4-2-实验环境"><span class="toc-text">4.4.2 实验环境</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-4-3-搭建智能DNS服务"><span class="toc-text">4.4.3 搭建智能DNS服务</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-4-4-Client机器进行测试"><span class="toc-text">4.4.4 Client机器进行测试</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#五-小结"><span class="toc-text">五. 小结</span></a></li></ol></li></ol>
+        </div>
+    
+</div>
+
+
+    </div>
+</div>
+</body>
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script src="//lib.baomitu.com/jquery/1.8.3/jquery.min.js"></script>
+<script src="/js/plugin.js"></script>
+<script src="/js/diaspora.js"></script>
+<link rel="stylesheet" href="/photoswipe/photoswipe.css">
+<link rel="stylesheet" href="/photoswipe/default-skin/default-skin.css">
+<script src="/photoswipe/photoswipe.min.js"></script>
+<script src="/photoswipe/photoswipe-ui-default.min.js"></script>
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+            <div class="pswp__top-bar">
+                <!--  Controls are self-explanatory. Order can be changed. -->
+                <div class="pswp__counter"></div>
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                      <div class="pswp__preloader__cut">
+                        <div class="pswp__preloader__donut"></div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div> 
+            </div>
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+</html>
