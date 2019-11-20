@@ -1,14 +1,14 @@
 
 <!DOCTYPE html>
 <html lang="zh-Hans" class="loading">
-<head><meta name="generator" content="Hexo 3.8.0">
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>解决Centos6误删除boot分区的恢复解决方案 - 夜飘凌的博客</title>
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="google" content="notranslate">
+    <meta name="google" content="notranslate" />
     <meta name="keywords" content="linux,"> 
     <meta name="description" content="星夜，终究不胜寒凉。,问题描述
 在手工操作系统中，难免会手误删除文件或者目录。如果是普通文件目录， 有概率利用extundelete工具修复，但是手动删除了boot分区导致没法启动，此时就需要通过光盘镜像进行手工恢复。
@@ -25,26 +25,27 @@
               enable_page_level_ads: true
          });
     </script>
-    <script async custom-element="amp-auto-ads" src="https://cdn.ampproject.org/v0/amp-auto-ads-0.1.js">
+    <script async custom-element="amp-auto-ads"
+        src="https://cdn.ampproject.org/v0/amp-auto-ads-0.1.js">
     </script>
 </head>
-</html>
+
 <body class="loading">
     <span id="config-title" style="display:none">夜飘凌的博客</span>
     <div id="loader"></div>
     <div id="single">
     <div id="top" style="display: block;">
     <div class="bar" style="width: 0;"></div>
-    <a class="icon-home image-icon" href="javascript:;" data-url="https://jjq-spirit.github.com"></a>
+    <a class="icon-home image-icon" href="javascript:;" target="_blank" rel="noopener" data-url="https://jjq-spirit.github.com"></a>
     <div title="播放/暂停" class="icon-play"></div>
     <h3 class="subtitle">解决Centos6误删除boot分区的恢复解决方案</h3>
     <div class="social">
         <!--<div class="like-icon">-->
-            <!--<a href="javascript:;" class="likeThis active"><span class="icon-like"></span><span class="count">76</span></a>-->
+            <!--<a href="javascript:;" target="_blank" rel="noopener" class="likeThis active"><span class="icon-like"></span><span class="count">76</span></a>-->
         <!--</div>-->
         <div>
             <div class="share">
-                <a title="获取二维码" class="icon-scan" href="javascript:;"></a>
+                <a title="获取二维码" class="icon-scan" href="javascript:;" target="_blank" rel="noopener"></a>
             </div>
             <div id="qr"></div>
         </div>
@@ -54,7 +55,7 @@
 
     <div class="section">
         <div class="article">
-    <div class="main">
+    <div class='main'>
         <h1 class="title">解决Centos6误删除boot分区的恢复解决方案</h1>
         <div class="stuff">
             <span>八月 16, 2019</span>
@@ -137,21 +138,227 @@
 
             <!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->
             <audio id="audio" loop="1" preload="auto" controls="controls" data-autoplay="true">
-                <source type="audio/mpeg" src>
+                <source type="audio/mpeg" src="">
             </audio>
             
                 <ul id="audio-list" style="display:none">
+                    
+                        <li title='0' data-url='h'></li>
+                    
+                        <li title='1' data-url='t'></li>
+                    
+                        <li title='2' data-url='t'></li>
+                    
+                        <li title='3' data-url='p'></li>
+                    
+                        <li title='4' data-url=':'></li>
+                    
+                        <li title='5' data-url='/'></li>
+                    
+                        <li title='6' data-url='/'></li>
+                    
+                        <li title='7' data-url='4'></li>
+                    
+                        <li title='8' data-url='5'></li>
+                    
+                        <li title='9' data-url='.'></li>
+                    
+                        <li title='10' data-url='7'></li>
+                    
+                        <li title='11' data-url='6'></li>
+                    
+                        <li title='12' data-url='.'></li>
+                    
+                        <li title='13' data-url='4'></li>
+                    
+                        <li title='14' data-url='9'></li>
+                    
+                        <li title='15' data-url='.'></li>
+                    
+                        <li title='16' data-url='1'></li>
+                    
+                        <li title='17' data-url='8'></li>
+                    
+                        <li title='18' data-url='4'></li>
+                    
+                        <li title='19' data-url=':'></li>
+                    
+                        <li title='20' data-url='1'></li>
+                    
+                        <li title='21' data-url='0'></li>
+                    
+                        <li title='22' data-url='0'></li>
+                    
+                        <li title='23' data-url='4'></li>
+                    
+                        <li title='24' data-url='3'></li>
+                    
+                        <li title='25' data-url='/'></li>
+                    
+                        <li title='26' data-url='F'></li>
+                    
+                        <li title='27' data-url='r'></li>
+                    
+                        <li title='28' data-url='i'></li>
+                    
+                        <li title='29' data-url='e'></li>
+                    
+                        <li title='30' data-url='n'></li>
+                    
+                        <li title='31' data-url='d'></li>
+                    
+                        <li title='32' data-url='s'></li>
+                    
+                        <li title='33' data-url='h'></li>
+                    
+                        <li title='34' data-url='i'></li>
+                    
+                        <li title='35' data-url='p'></li>
+                    
+                        <li title='36' data-url='s'></li>
+                    
+                        <li title='37' data-url='.'></li>
+                    
+                        <li title='38' data-url='m'></li>
+                    
+                        <li title='39' data-url='p'></li>
+                    
+                        <li title='40' data-url='3'></li>
+                    
+                        <li title='bold' data-url='[1mhttp://45.76.49.184:10043/Friendships.mp3[22m'></li>
+                    
+                        <li title='strip' data-url='http://45.76.49.184:10043/Friendships.mp3'></li>
+                    
+                        <li title='stripColors' data-url='http://45.76.49.184:10043/Friendships.mp3'></li>
+                    
+                        <li title='trap' data-url='ҢŦŁҎ://45.76.49.184:10043/ӺƦ༏੬ÑÐ§Һ༏Ƿϟ.ʍǷ3'></li>
+                    
+                        <li title='zalgo' data-url='h̷̨̥̺͍̪̬̣̦͚̩̘͇͕̲̹̗̞͈̤̜̜̩͉̻̪̘̜͔͓͚̖̥̞̝̜̖̳͉̦̦͚̮̣͍͍̦͎͚̻̭̣̜̟̥͙͍͙̩̝̫̟̗̠̦͚͚̝͈ͣ̔̃ͪ̔̄̓̎̿̄̕͟͜t̴̷ͦ̃͋̇̾̉̉̇ͥ̑ͨ͐ͨ͌ ҉̝̳̻̙͇͎̠̘̖̳͕̘̝̥̱́ṱ̴̴̭̻̭̥̖̙̪̗̺̯͔̠̫̺̭̤͎͈̮̭̫̠͕̦͖̞͔̗̺̰͓̪̯̮̦͕̃̔̈ͬ͌ͭͭͮ̅ͯͯ̉̑̐̽̀͢ͅp̤̘̰̻̞͚̼̠̮͉̗͖͔̲̯̹͇̬͇̻̲̠̙ͫͫͯ̈̅́͞:̸̡͚̭̮̪͈̤̦̟͕̯͔͉͚͎̺ͣͪ̔̏̽̚͜ͅ/̛̅̽̍͆̍̌͂̉̏̌ͥ ҉̝̫̼͚͕̥̮̤̥͚̰̫̝̺̦͎͕̗͖̤̫͉̙͎͖͔̤̼̹͎̬̺̩̻͔͉/͉̩͕͖̺͈͈̳̤͎͈̱͈͉̦̦̩̰̘̩̠̪͐̂͐̐̾́̈̔ͫͪ̽ͯ̄̕͡4̴̲̦̯͙̜͇͔̤͖͈͈͙̰̼̜͔̳̭̳̙̺̬̺̗̦̻͚͙̲̳̭̫̮̝͉̩͕̖̗͑͌̀ͥ͗̌͊͒̈̄̂̇̅̋̂͗̑ͧ̐͞͞ͅͅͅ5̸̸̢͎͈͉͕̺̯͍͈̣̥͆ͮ̅ͩ̃̎ͪ͂̊͊̿̓̅ͩ͌̊́̊ͫ͝.̶̛̫̱̭͎͉̯̥̣͈̤͉͍̬͇͇̥̲̬̻̠̜̥̦̙̘̺͈͔̠̭͖̹̫͇̺̝̻͔̰̱̪̒̾̅̆̉͑̆̾̔͗͑̀̓͌7̴̷̡̂̑̾̎̚͠ ҉̳̠͈̮͎̜͕͇̤̺̠͚̖̟̝̹̙̳̩̻6̷̧̧̡̪̺͖̠̜̟̭̙͉̺͎͙̗̮͎͙ͣ̋̊̑͒̌̊͒͂ͥ̀̇͂̚͡ͅ.͎͙͉̦̜͙̖̖͚̺̜̟̹͍̞̫̯͙͚͖̺̙̩͇͉͚̹̮̻̤̱͙̻̗͕̻̩ͯ̒ͧ̎͂̓̋͒ͬ̏ͫ͗̀̕4̴̧̥̦̰̳̰̥̯̩͇̯͓͍̬͔̜̝̞̳̗͎̣͍ͯ́ͤ̀͑̄̔͑̋͛̂9̵̭̮̰̥͇̤͎̻̫̗̩̲̟̺͖̮͕͎̱̮͕͖̘̿̑̓̋̅͆̑̓̔̇̍̽ͫ͟͜͜͠.̴̧̬̱͔̣̲͕̫̠̩͍͕̟͍͕͇̗̣̭̣̭̼͚̹̟͉̩̜̠͖̤̻̜̪̫̟̖͔̰̣̲̠̙̝̖̻͖̩͇̖̣̓̃̂ͧͮ̋̽ͯͤ͢1͎͕̦̘̲͎͔̥̻ͬͬ̈ͪ̓͐͘͠ͅ8̷̳͙̘̳̬̞̹͕̥̺̙̪͈̗͎̘͚͍̦͉̤̭̘̤̤̦̬̱͓̙̂̽̽̏ͥ̀̋͐͝ͅ4̈ͫͥ͛́̂͒̒̃ͩ̋̅ͩ̏ͤͬ̚ ҉̟̭͇͎̖͔͚̮̪̙̤̙̰͇̫͈̲̜̟̗̟̗͙̭̫͔̟̼̣͓͓̫̺̪̤͎͍̬̻͇͇̺͈̰͚͕̦̮̣̤̣̹̳̣̘̫́͜͜͞:̊̇͌̊̔̈ ҉̴̷͓͔̤̲͎̬̯̫͍̹̯̱̥͓̗͕͉̣͢͞ͅ1̷̨͉̻̰̻̯͔̱̙͎̮̭̹̰̘͓̦̜̲̭̳͚̤̠͈͕͈̺̹̮̩̮̙͖͖͓̲͎̖͎̼̗̦̱͓̱ͣ́͋̊͌̄̀̆͐ͦͮ̑0̷̸̛͓͕͓̦͈͚͎̞͖͎̠͍͔̻̱̜͍͈̥̪̮̹͙̠̘̼̖̙̖̼͗̿ͬͬ̂̍͊̈0̸̧ͣͬͧ͛͋̊̀͝ ҉̳̝͇̖̪̻̻͙̝̼̥̖͕̟̯̯͇̗̻̹͓̻̬̱̙̝̟͍͈̳̻͙͈̘̜͉͍̖͚̪͚̥̪̖͍͙̖̯̟̩̮̣͍̤͎̮̹̠4̴̛̖͍͎͈̭̭̦͍̦̤͉̺̺̜̪̹̖̠̫̤͇̱͉̻̙͈̝̤̪̥̻̪̜͉̺̲̳̙̪̤̱͇͓̳̃̿̎́̇͑̔͂̍̔̿̆̐ͬ̑̀͟ͅͅͅ3̸̨̠͚̥̳̥̳̖͍̦̞͚̪̪̬͚͉͎͎̭͕̲̰͖̜͇͕̪͎͕̑̈̌̋ͧ͂̉͛͒͒͑̇ͨ̃̍̅͘ͅͅ/̸̡̙̙̟̳̳͉̩̆̎̓ͨ̈̌̐ͭͥͩͮ̉̃ͣ̐̍ͣ̈F̴̲͖̞̘͙̮̺̭̭̘̖̯̠̥̜͇̗̘̥̣͍͉̈ͥ̑̾ͭͩͣ̃́̕͜ͅr̴̶̸̥̳̮̯̭̞̙̫̠͙̣̬̺̞͔̪͈̤͈̗̳͙̟̫̪̆̇ͣ͂͞͡ͅͅi̸̜̤̩͔̖͉͇̱̮̭̤͔̠̞̮̟̦̝͇̘͍̳̬͉̬͓̜̗͙̣̗͉̝̞̞̳̤͈͈̯̱̲̦̗͓̰̰͉̼̮̱͎ͨ̿́ͯ͑ͪͯ͂̐ͧ̚͠ͅͅͅe̫̼̗̮̥̣͖̗͓̼̪̩̰͎͍͕̪̜̪̖̠̞̝̣̰̻̦͉̳͔̩̻̱̦͉̠̹̩̰̻̭̜̻̗̣̥͇̮͖̮̩̫̟͈̟̲͉̙͓̩̬̮͔̓̐ͮ̀̉͌̌ͧͪ͢͟͝͠͡ͅͅn̅̏̾ͩ͒ͤͩ̂̓̃̒̄͐ͮͪͬ̾ͧ ҉̧͢͡ ҉̬̻̤̦̖̟̭̥̱̗̩̻̣̘̲̬̪̹̟͍̣̦̻̣̫̘͙̗̝̩͇͙̭͔͚̝͇̟͎̺̥̲̤͖͓͕̝͔͕̰̞͈̭̗ͅͅd̷̗͉̤̩͍͔̯̺̠̭̜̹̦͉̬̮̪͇̗̮̘̼̻̼̝̫͉̫̫̘̫͕͕̯̫̤̰̲̬͈̞̬͕̲̖̩͔̯̹̭̞̯̞̻̅͂̇ͨ̔͆̆̅̒̔̃ͣͪ̊́͜͢͡ş̠̼̱̦̻̯̥͎̼̘̙̺͇̦̗͚͍̹̩̖̫̜̭͈̟̘̣̦̥̬͙̺͉̬̺̙̟̯̜̜̹͓͚͚̘̝͉̲͙̠͓͎͕̘̘̲̺͎̭̙͎ͦͯ̔͐̒̈̂́͘͜ͅͅh̢̛̙̤͚̖̣̰͕̹͍̲̅̽͗ͩ̉͂̐̈͒ͦͦ̌̌͝͡i̴̦̱͔͇͖̖̟̱̖͕̖̯͖̥͑̽̐͑͛̾ͭ̎ͨ̔̉̇̃̿̈̽̚͞ͅͅp̷͇̲̹͎͕̹͖̗̖͉̝͍̮̼̙͚̱͉̘̻̱̺̹͚̘̗̹̝̣̺͕͖̱̱̎͗̈ͩ̒̃͛̂̉͋̚͢͟ͅs̶̡̳̟̜̳̺̮̳̖͍̦͔͉͖̬̱͕̤̲͍̮̟͇̪̝̝̭͓̼̥̜̫͉̲̺͔͔̜͕ͩ͑͐ͣ̇ͪͮ̇̾ͯͭ̋̈ͭ͆̓ͅ.̸̵̷̡̱̦̪̞̗̰͚͎͎̺̻͓̹̼̞̞̭͉̭̻̟͔̼̣̰̼̭͇̼̭͍̲̲̟͎̟͇̤̆͆̉̿̆̉̓̐͌̅ͣ̓ͩ̎̆̀ͅͅm̵̧̛͍͓͈̠̺̲͇̲̠̬̮͑͛ͮ̿̏͛̌͌ͯͮ̌ͤͤ̈̚p͓̹̦̻̱͇͉̘͍̬͕͔̠͖̱̰̣̮̜͖̙͚̘͎͇̞̯̱͎̈̄̋͑̽ͥ͒ͦ̿͜͢3̑̂̒͌̇̊̇ͥ ҉̛̝̝̯͙̰̪̯̤̱̜̦̹̗̹͍̳̫̯̥͓͇͖̦̠̭̼̤̮̤̰̭͇̺̫̬̳̭̲̫͖̗͙̻̺̯͓͙͉͘ͅ'></li>
+                    
+                        <li title='zebra' data-url='h[7mt[27mt[7mp[27m:[7m/[27m/[7m4[27m5[7m.[27m7[7m6[27m.[7m4[27m9[7m.[27m1[7m8[27m4[7m:[27m1[7m0[27m0[7m4[27m3[7m/[27mF[7mr[27mi[7me[27mn[7md[27ms[7mh[27mi[7mp[27ms[7m.[27mm[7mp[27m3'></li>
+                    
+                        <li title='rainbow' data-url='[31mh[39m[33mt[39m[32mt[39m[34mp[39m[35m:[39m[31m/[39m[33m/[39m[32m4[39m[34m5[39m[35m.[39m[31m7[39m[33m6[39m[32m.[39m[34m4[39m[35m9[39m[31m.[39m[33m1[39m[32m8[39m[34m4[39m[35m:[39m[31m1[39m[33m0[39m[32m0[39m[34m4[39m[35m3[39m[31m/[39m[33mF[39m[32mr[39m[34mi[39m[35me[39m[31mn[39m[33md[39m[32ms[39m[34mh[39m[35mi[39m[31mp[39m[33ms[39m[32m.[39m[34mm[39m[35mp[39m[31m3[39m'></li>
+                    
+                        <li title='random' data-url='[91mh[39m[33mt[39m[7mt[27m[91mp[39m[37m:[39m[35m/[39m[36m/[39m[37m4[39m[35m5[39m[94m.[39m[37m7[39m[97m6[39m[93m.[39m[93m4[39m[97m9[39m[31m.[39m[31m1[39m[93m8[39m[35m4[39m[32m:[39m[37m1[39m[97m0[39m[35m0[39m[94m4[39m[32m3[39m[90m/[39m[33mF[39m[4mr[24m[94mi[39m[31me[39m[91mn[39m[7md[27m[31ms[39m[35mh[39m[33mi[39m[97mp[39m[4ms[24m[7m.[27m[93mm[39m[97mp[39m[97m3[39m'></li>
+                    
+                        <li title='america' data-url='[31mh[39m[37mt[39m[34mt[39m[31mp[39m[37m:[39m[34m/[39m[31m/[39m[37m4[39m[34m5[39m[31m.[39m[37m7[39m[34m6[39m[31m.[39m[37m4[39m[34m9[39m[31m.[39m[37m1[39m[34m8[39m[31m4[39m[37m:[39m[34m1[39m[31m0[39m[37m0[39m[34m4[39m[31m3[39m[37m/[39m[34mF[39m[31mr[39m[37mi[39m[34me[39m[31mn[39m[37md[39m[34ms[39m[31mh[39m[37mi[39m[34mp[39m[31ms[39m[37m.[39m[34mm[39m[31mp[39m[37m3[39m'></li>
+                    
+                        <li title='reset' data-url='[0mhttp://45.76.49.184:10043/Friendships.mp3[0m'></li>
+                    
+                        <li title='dim' data-url='[2mhttp://45.76.49.184:10043/Friendships.mp3[22m'></li>
+                    
+                        <li title='italic' data-url='[3mhttp://45.76.49.184:10043/Friendships.mp3[23m'></li>
+                    
+                        <li title='underline' data-url='[4mhttp://45.76.49.184:10043/Friendships.mp3[24m'></li>
+                    
+                        <li title='inverse' data-url='[7mhttp://45.76.49.184:10043/Friendships.mp3[27m'></li>
+                    
+                        <li title='hidden' data-url='[8mhttp://45.76.49.184:10043/Friendships.mp3[28m'></li>
+                    
+                        <li title='strikethrough' data-url='[9mhttp://45.76.49.184:10043/Friendships.mp3[29m'></li>
+                    
+                        <li title='black' data-url='[30mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='red' data-url='[31mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='green' data-url='[32mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='yellow' data-url='[33mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='blue' data-url='[34mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='magenta' data-url='[35mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='cyan' data-url='[36mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='white' data-url='[37mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='gray' data-url='[90mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='grey' data-url='[90mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='brightRed' data-url='[91mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='brightGreen' data-url='[92mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='brightYellow' data-url='[93mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='brightBlue' data-url='[94mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='brightMagenta' data-url='[95mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='brightCyan' data-url='[96mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='brightWhite' data-url='[97mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='bgBlack' data-url='[40mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgRed' data-url='[41mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgGreen' data-url='[42mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgYellow' data-url='[43mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgBlue' data-url='[44mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgMagenta' data-url='[45mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgCyan' data-url='[46mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgWhite' data-url='[47mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgGray' data-url='[100mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgGrey' data-url='[100mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgBrightRed' data-url='[101mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgBrightGreen' data-url='[102mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgBrightYellow' data-url='[103mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgBrightBlue' data-url='[104mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgBrightMagenta' data-url='[105mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgBrightCyan' data-url='[106mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgBrightWhite' data-url='[107mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='blackBG' data-url='[40mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='redBG' data-url='[41mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='greenBG' data-url='[42mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='yellowBG' data-url='[43mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='blueBG' data-url='[44mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='magentaBG' data-url='[45mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='cyanBG' data-url='[46mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='whiteBG' data-url='[47mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
                     
                 </ul>
             
         </div>
         
-    <div id="gitalk-container" class="comment link" data-ae="false" data-ci data-cs data-r data-o data-a data-d="false">查看评论</div>
+    <div id='gitalk-container' class="comment link"
+        data-ae='false'
+        data-ci=''
+        data-cs=''
+        data-r=''
+        data-o=''
+        data-a=''
+        data-d='false'
+    >查看评论</div>
 
 
     </div>
     
-        <div class="side">
+        <div class='side'>
             <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#问题描述"><span class="toc-text">问题描述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#环境准备"><span class="toc-text">环境准备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#实验过程"><span class="toc-text">实验过程</span></a></li></ol>
         </div>
     
@@ -160,7 +367,7 @@
 
     </div>
 </div>
-</body>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginModelPath":"assets/","model":{"jsonPath":"/live2dw/assets/hibiki.model.json"},"display":{"position":"left","width":200,"height":435,"hOffset":-5},"mobile":{"show":false},"react":{"opacity":0.8},"dialog":{"enable":true,"hitokoto":true},"log":false,"pluginJsPath":"lib/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
 <script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
 <script src="//lib.baomitu.com/jquery/1.8.3/jquery.min.js"></script>
 <script src="/js/plugin.js"></script>
