@@ -1,0 +1,324 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hans" class="loading">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LVS工作原理详解 - 夜飘凌的博客</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="google" content="notranslate" />
+    <meta name="keywords" content="linux,"> 
+    <meta name="description" content="星夜，终究不胜寒凉。,LVS工作原理详解一. LVS的概念LVS (Linux Virtual Server) Linux虚拟服务器。由章文嵩博士开发，现已经写入Linux内核的一个基于四层 (传输层) 的负载均衡调度器,"> 
+    <meta name="author" content="Night"> 
+    <link rel="alternative" href="atom.xml" title="夜飘凌的博客" type="application/atom+xml"> 
+    <link rel="icon" href="/img/night.png"> 
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+    <link rel="stylesheet" href="/css/diaspora.css">
+    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({
+              google_ad_client: "ca-pub-8691406134231910",
+              enable_page_level_ads: true
+         });
+    </script>
+    <script async custom-element="amp-auto-ads"
+        src="https://cdn.ampproject.org/v0/amp-auto-ads-0.1.js">
+    </script>
+</head>
+
+<body class="loading">
+    <span id="config-title" style="display:none">夜飘凌的博客</span>
+    <div id="loader"></div>
+    <div id="single">
+    <div id="top" style="display: block;">
+    <div class="bar" style="width: 0;"></div>
+    <a class="icon-home image-icon" href="javascript:;" target="_blank" rel="noopener" data-url="https://jjq-spirit.github.com"></a>
+    <div title="播放/暂停" class="icon-play"></div>
+    <h3 class="subtitle">LVS工作原理详解</h3>
+    <div class="social">
+        <!--<div class="like-icon">-->
+            <!--<a href="javascript:;" target="_blank" rel="noopener" class="likeThis active"><span class="icon-like"></span><span class="count">76</span></a>-->
+        <!--</div>-->
+        <div>
+            <div class="share">
+                <a title="获取二维码" class="icon-scan" href="javascript:;" target="_blank" rel="noopener"></a>
+            </div>
+            <div id="qr"></div>
+        </div>
+    </div>
+    <div class="scrollbar"></div>
+</div>
+
+    <div class="section">
+        <div class="article">
+    <div class='main'>
+        <h1 class="title">LVS工作原理详解</h1>
+        <div class="stuff">
+            <span>九月 25, 2019</span>
+            
+
+        </div>
+        <div class="content markdown">
+            <h1 id="LVS工作原理详解"><a href="#LVS工作原理详解" class="headerlink" title="LVS工作原理详解"></a>LVS工作原理详解</h1><h2 id="一-LVS的概念"><a href="#一-LVS的概念" class="headerlink" title="一. LVS的概念"></a>一. LVS的概念</h2><p>LVS (Linux Virtual Server) Linux虚拟服务器。由章文嵩博士开发，现已经写入Linux内核的一个基于四层 (传输层) 的负载均衡调度器，该项目实现了基于IP地址和端口的数据请求负载均衡方案。</p>
+<h2 id="二-LVS的工作原理"><a href="#二-LVS的工作原理" class="headerlink" title="二. LVS的工作原理"></a>二. LVS的工作原理</h2><ul>
+<li>IPVS：核心代码       内核态   是真正实现调度的代码</li>
+<li>IPVSADM：工具     用户态    定义集群服务和确定谁是后端的真实服务器</li>
+</ul>
+<p>当一个客户端访问Directory Server (负载均衡调度器) 时，会发送SYN包，此时SYN包会被传入<font style='color:red'>PREROUTING</font>链，内核发现请求目标是本机时，会将数据包发送至<font style='color:red'>INPUT</font>链，IPVS工作在INPUT链上，如果数据包中的目标地址和端口没有在规则里，IPVS会将数据包发通过INPUT链发送至IPVSADM用户空间，交给其处理。如果在规则里，那么IPVS将会强行将数据包的目标IP和端口指向后端服务器，并通过<font style='color:red'>POSTROUTING</font>链发送给后端服务器。</p>
+<p>示意图如下：</p>
+<p><img src="http://45.76.49.184:10043/images/LVS/LVS.png" alt="enter image description here"></p>
+<p>简单对比一下Iptables各链的名称和作用</p>
+<table>
+<thead>
+<tr>
+<th align="center">链名</th>
+<th align="center">作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">PREROUTING</td>
+<td align="center">所有进入本机的数据包</td>
+</tr>
+<tr>
+<td align="center">INPUT</td>
+<td align="center">继续在本机处理，向上层协议栈流入的数据包，交由本机进程处理</td>
+</tr>
+<tr>
+<td align="center">FORWARD</td>
+<td align="center">被转发到其他目的地的数据包</td>
+</tr>
+<tr>
+<td align="center">OUTPUT</td>
+<td align="center">经过本机进程处理流出的数据包</td>
+</tr>
+<tr>
+<td align="center">POSTROUTING</td>
+<td align="center">所有流出本机的数据包</td>
+</tr>
+</tbody></table>
+<h2 id="三-LVS的工作模式"><a href="#三-LVS的工作模式" class="headerlink" title="三. LVS的工作模式"></a>三. LVS的工作模式</h2><h3 id="3-1-VS-NAT模式"><a href="#3-1-VS-NAT模式" class="headerlink" title="3.1 VS-NAT模式"></a>3.1 VS-NAT模式</h3><p>VS-NAT (Virtual Server via NAT) ：通过NAT地址转换技术，解决了外网访问内网机器的难题。有着修改外网流量包的地址的能力，将目标IP和端口指向内网的后端服务器，LVS必须充当网关的角色。</p>
+<p>优点：</p>
+<ul>
+<li>节省IP地址</li>
+<li>能对内部服务器进行伪装</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>效率较低</li>
+<li>服务器压力较大 (返回数据包需要经过Directory Server)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">名称</th>
+<th align="center">作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Client</td>
+<td align="center">客户端，模拟发起的请求</td>
+</tr>
+<tr>
+<td align="center">IPVS</td>
+<td align="center">根据用户定义的集群实现请求转发</td>
+</tr>
+<tr>
+<td align="center">IPVSADM</td>
+<td align="center">用户空间的命令工具</td>
+</tr>
+<tr>
+<td align="center">VIP</td>
+<td align="center">Virtual IP对外的虚拟IP</td>
+</tr>
+<tr>
+<td align="center">DIP</td>
+<td align="center">Director IP 负载调度器对内的IP</td>
+</tr>
+<tr>
+<td align="center">CIP</td>
+<td align="center">客户端发起的IP</td>
+</tr>
+<tr>
+<td align="center">Real Server</td>
+<td align="center">后端真实服务器</td>
+</tr>
+<tr>
+<td align="center">RIP</td>
+<td align="center">后端真实服务器IP</td>
+</tr>
+</tbody></table>
+<p>示意图：</p>
+<p><img src="http://45.76.49.184:10043/images/LVS/LVS_NAT.png" alt="enter image description here"></p>
+<p>工作流程</p>
+<ol>
+<li>首先客户端发起请求，此时请求先经过PREROUTING链。源IP为CIP，目标IP为VIP。</li>
+<li>PREROUTING发现目标IP是本机，将数据包发送至INPUT链。</li>
+<li>IPVS查看数据包请求服务是否为集群服务，如果是，将数据包的目标IP修改为RIP，然后将数据包发送至POSTROUTING链。此时源IP为CIP，目标IP为RIP。</li>
+<li>POSTROUTING将数据包发送给后端真实服务器</li>
+<li>真实服务器发送回响包至Director Server，原地址RIP，目标地址CIP。</li>
+<li>Director Server在响应Client前，现将报文的原地址改为自己的VIP，再响应客户端。</li>
+</ol>
+<p>简化版：</p>
+<p><img src="http://45.76.49.184:10043/images/LVS/LVS_NAT_Simple.png" alt="enter image description here"></p>
+<h3 id="3-2-VS-DR模式"><a href="#3-2-VS-DR模式" class="headerlink" title="3.2 VS-DR模式"></a>3.2 VS-DR模式</h3><p>VS-DR(Virtual Server via Direct Routing)：采用直接路由的模式，该模式要求调度服务器必须和后端真实服务器在同一广播域下，此模式工作在二层的数据链路层上。</p>
+<p>简化版示意图：</p>
+<p><img src="http://45.76.49.184:10043/images/LVS/LVS_DR_Simple.png" alt="enter image description here"></p>
+<p>Director会将VIP配置到对外的网卡上，Real Server将该IP配置到回环网卡lo的子接口上。但是却有一种问题出现，那就是真实服务器的回环网卡VIP与负载调度器VIP起冲突，为了避免这种冲突，采用ARP请求静默方式，只有Director保持活跃。收到数据包后，利用调度算法，将目的MAC改成Real Server的MAC，并发送给Real Server，由于RS的回环网卡上也有VIP，所以RS接受此数据包。最后，再由Real Server修改数据包的源地址，回传给Client。</p>
+<p>完整示意图：</p>
+<p><img src="http://45.76.49.184:10043/images/LVS/LVS_DR.png" alt="enter image description here"></p>
+<p>从客户端发起请求到真实服务器，整个过程源IP和目标IP未变，到Director时源CIP-MAC换成DIP-MAC，目标VIP-MAC换成RIP-MAC。</p>
+<p>特性：</p>
+<ul>
+<li>RS可以有私有地址，也可以有公网地址，如果有公网地址，可直接让互联网与RIP进行访问</li>
+<li>Director必须与RS在同一个广播域中</li>
+<li>所有请求报文必须经过Director，回响必须不经过Director</li>
+<li>不支持地址转发，不支持端口映射 (因为基于数据链路层)</li>
+<li>RS可以不是Linux系统</li>
+<li>RS的网关不允许指向DIP</li>
+</ul>
+<h3 id="3-3-VS-TUN模式"><a href="#3-3-VS-TUN模式" class="headerlink" title="3.3 VS-TUN模式"></a>3.3 VS-TUN模式</h3><p>VS-TUN (Virtual Server via IP Tunneling)：对源数据包二次封装转发至不同地域的真实服务器。</p>
+<p>简易版示意图：</p>
+<p><img src="http://45.76.49.184:10043/images/LVS/LVS_TUN_Simple.png" alt="enter image description here"></p>
+<p>过程：</p>
+<ol>
+<li>客户端发起请求至Director Server，此时源IP为CIP，目标IP为VIP。</li>
+<li>Director Server发现请求的规则在里面，他将会在客户端发起请求的报文上在封装一层从DIP指向RIP的地址。此时，源IP为DIP，目标IP为RIP。</li>
+<li>Real Server拆开第一层封装发现里面还有一层CIP到VIP的，此时回环网卡上开启了一个子接口，写的是VIP地址，所以会再次处理报文，最后将回包通过eth0网卡返回给客户端。</li>
+</ol>
+<p>完整版示意图：</p>
+<p><img src="http://45.76.49.184:10043/images/LVS/LVS_TUN.png" alt="enter image description here"></p>
+<p>特点：</p>
+<ul>
+<li>RIP、DIP、VIP全是公网地址或间接拥有公网IP</li>
+<li>Real Server网关不能指向DIP</li>
+<li>不支持端口映射</li>
+<li>Real Server系统必须支持隧道</li>
+</ul>
+<h2 id="四-三种模式的对比"><a href="#四-三种模式的对比" class="headerlink" title="四. 三种模式的对比"></a>四. 三种模式的对比</h2><p>NAT 模式<br>        1、负载调度器必须是 Linux，后端服务器随意<br>        2、支持端口映射<br>        3、负载调度器位于 RS 与 Client之间，充当路由的角色，必须将网关指向至 Director<br>        4、负责出站以及入站请求，压力较大（LVS 之间的横向比较）</p>
+<p>DR  模式<br>        1、真实服务器和负载调度器必须都是 Linux 操作系统<br>        2、不支持端口映射<br>        3、负载调度器和真实服务器处于同一个广播域中<br>        4、负载调度器处理入站请求，真实服务器处理出站请求</p>
+<p>TUN 模式<br>        1、真实服务器和负载调度器必须是Linux操作系统<br>        2、每台集群节点必须拥有 公网IP  或者间接拥有公网IP<br>        3、采用数据包二次封装传递隐含数据<br>        4、负载调度器处理入站请求，出站请求由真实服务器完成</p>
+<h2 id="五-调度算法"><a href="#五-调度算法" class="headerlink" title="五. 调度算法"></a>五. 调度算法</h2><h3 id="5-1-静态调度算法"><a href="#5-1-静态调度算法" class="headerlink" title="5.1  静态调度算法"></a>5.1  静态调度算法</h3><ol>
+<li>RR (Round Robin)：轮询调度。将不同的请求压力按循环的方式调度到不同的服务器上，这种模式的优点就是简单，但是有缺点，那就是如果每个服务器性能不同，分担的压力还是不一样。</li>
+<li>WRR (Weight Round Robin)：权重轮询调度。对RR算法的一种升级，支持权重的方式。性能高的服务器权重值给高点，性能低的反之。权重越高的处理的请求越多。</li>
+<li>SH (Source Hash)：源地址散列调度。举个例子，比如用户在访问淘宝时需要登录认证，但由于HTTP是无状态协议，下次访问还需要登录。这时就需要session和cookie去记录，如果开发工程师只将session指向本机，这时如果进行负载均衡，别的服务器上没有session记录，这时就需要SH算法调度，将同一个IP用户的请求指向一台已有session缓存的服务器。</li>
+<li>DH (Destination Hash)：目标地址散列调度。举个例子，DNS缓存服务器在每次访问前如果没有记录，会将请求转至DNS服务器，将记录调出来再缓存。第一次这样做是很费时的且后端真实DNS服务器压力很大，如果仍然采用轮询算法，第二台缓存服务器仍旧没有记录，会大大增加后端DNS服务器的访问压力，这时就需要将同一个<font style='color:red'>目标地址</font>的用户，发送给同一台真实服务器，可概率大大提升缓存的命中率。</li>
+</ol>
+<h3 id="5-2-动态调度算法"><a href="#5-2-动态调度算法" class="headerlink" title="5.2 动态调度算法"></a>5.2 动态调度算法</h3><ol>
+<li>LC (Least Connections)：最小连接调度。将新的连接请求分配给当前连接数最小的机器，算法是活动链接 * 256 + 非活动连接数，然后分别做对比，谁的值最小，就将请求分配给哪台机器。</li>
+<li>WLC (Weight Least Connections)：权重最小连接调度。支持权重的LC调度算法，算法是 (活动连接数 * 256 + 非活动连接数) / 权重，缺点是分配新的请求时，如果服务器性能不一样，这时会随机找一台服务器进行分配请求。</li>
+<li>SED (Shortest Expected Delay)：基于WLC算法调度，解决了分配新请求时的随机匹配。算法是 (活动连接数 + 1) * 256  / 权重，这样就避免了出现0的情况。</li>
+<li>NQ(Nerver Queue)：最少队列调度。不需要队列，如果有请求且所有Real Server的链接数都是0，那么无需SED运算，直接分配请求。</li>
+<li>LBLC(Locality-Based Least Connections)：基于地址的最小连接数调度，将来自同一个目的地址的请求分配给同一台RS，此时这台服务器是尚未满负荷的。否则就将这个请求分配给连接数最小的RS，并以它作为下一次分配的首先考虑。</li>
+</ol>
+<blockquote>
+<p>参考: <a href="https://www.cnblogs.com/liwei0526vip/p/6370103.html" target="_blank" rel="noopener">https://www.cnblogs.com/liwei0526vip/p/6370103.html</a></p>
+</blockquote>
+<blockquote>
+<p>各模式的搭建教程以及高可用实现将在下篇文章写出</p>
+</blockquote>
+
+            <!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->
+            <audio id="audio" loop="1" preload="auto" controls="controls" data-autoplay="true">
+                <source type="audio/mpeg" src="http://45.76.49.184:10043/music/Bird.mp3">
+            </audio>
+            
+        </div>
+        
+    <div id='gitalk-container' class="comment link"
+        data-ae='false'
+        data-ci=''
+        data-cs=''
+        data-r=''
+        data-o=''
+        data-a=''
+        data-d='false'
+    >查看评论</div>
+
+
+    </div>
+    
+        <div class='side'>
+            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#LVS工作原理详解"><span class="toc-text">LVS工作原理详解</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#一-LVS的概念"><span class="toc-text">一. LVS的概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二-LVS的工作原理"><span class="toc-text">二. LVS的工作原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三-LVS的工作模式"><span class="toc-text">三. LVS的工作模式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-VS-NAT模式"><span class="toc-text">3.1 VS-NAT模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-VS-DR模式"><span class="toc-text">3.2 VS-DR模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-VS-TUN模式"><span class="toc-text">3.3 VS-TUN模式</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#四-三种模式的对比"><span class="toc-text">四. 三种模式的对比</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#五-调度算法"><span class="toc-text">五. 调度算法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-静态调度算法"><span class="toc-text">5.1  静态调度算法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-动态调度算法"><span class="toc-text">5.2 动态调度算法</span></a></li></ol></li></ol></li></ol>
+        </div>
+    
+</div>
+
+
+    </div>
+</div>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginModelPath":"assets/","model":{"jsonPath":"/live2dw/assets/hibiki.model.json"},"display":{"position":"left","width":200,"height":435,"hOffset":-5},"mobile":{"show":false},"react":{"opacity":0.8},"dialog":{"enable":true,"hitokoto":true},"log":false,"pluginJsPath":"lib/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script src="//lib.baomitu.com/jquery/1.8.3/jquery.min.js"></script>
+<script src="/js/plugin.js"></script>
+<script src="/js/diaspora.js"></script>
+<link rel="stylesheet" href="/photoswipe/photoswipe.css">
+<link rel="stylesheet" href="/photoswipe/default-skin/default-skin.css">
+<script src="/photoswipe/photoswipe.min.js"></script>
+<script src="/photoswipe/photoswipe-ui-default.min.js"></script>
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+            <div class="pswp__top-bar">
+                <!--  Controls are self-explanatory. Order can be changed. -->
+                <div class="pswp__counter"></div>
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                      <div class="pswp__preloader__cut">
+                        <div class="pswp__preloader__donut"></div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div> 
+            </div>
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-153135716-1', 'auto');
+  ga('send', 'pageview');
+</script>
+<!-- End Google Analytics -->
+
+
+</html>
