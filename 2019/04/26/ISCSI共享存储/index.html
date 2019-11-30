@@ -1,0 +1,584 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hans" class="loading">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CLVM+GFS2+ISCSI实现Web服务共享存储集群架构 - 夜飘凌的博客</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="google" content="notranslate" />
+    <meta name="keywords" content="linux,"> 
+    <meta name="description" content="星夜，终究不胜寒凉。,简介GFS2 : 集群文件系统，这是由RedHat公司开发的，GFS文件系统允许多个服务同时读写一个磁盘分区，通过GFS可以实现数据的集中管理，免去了数据同步和拷贝的麻烦，但GFS并不能孤立的存在，,"> 
+    <meta name="author" content="Night"> 
+    <link rel="alternative" href="atom.xml" title="夜飘凌的博客" type="application/atom+xml"> 
+    <link rel="icon" href="/img/night.png"> 
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+    <link rel="stylesheet" href="/css/diaspora.css">
+    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({
+              google_ad_client: "ca-pub-8691406134231910",
+              enable_page_level_ads: true
+         });
+    </script>
+    <script async custom-element="amp-auto-ads"
+        src="https://cdn.ampproject.org/v0/amp-auto-ads-0.1.js">
+    </script>
+</head>
+
+<body class="loading">
+    <span id="config-title" style="display:none">夜飘凌的博客</span>
+    <div id="loader"></div>
+    <div id="single">
+    <div id="top" style="display: block;">
+    <div class="bar" style="width: 0;"></div>
+    <a class="icon-home image-icon" href="javascript:;" target="_blank" rel="noopener" data-url="https://jjq-spirit.github.com"></a>
+    <div title="播放/暂停" class="icon-play"></div>
+    <h3 class="subtitle">CLVM+GFS2+ISCSI实现Web服务共享存储集群架构</h3>
+    <div class="social">
+        <!--<div class="like-icon">-->
+            <!--<a href="javascript:;" target="_blank" rel="noopener" class="likeThis active"><span class="icon-like"></span><span class="count">76</span></a>-->
+        <!--</div>-->
+        <div>
+            <div class="share">
+                <a title="获取二维码" class="icon-scan" href="javascript:;" target="_blank" rel="noopener"></a>
+            </div>
+            <div id="qr"></div>
+        </div>
+    </div>
+    <div class="scrollbar"></div>
+</div>
+
+    <div class="section">
+        <div class="article">
+    <div class='main'>
+        <h1 class="title">CLVM+GFS2+ISCSI实现Web服务共享存储集群架构</h1>
+        <div class="stuff">
+            <span>四月 26, 2019</span>
+            
+
+        </div>
+        <div class="content markdown">
+            <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p><strong>GFS2</strong> : 集群文件系统，这是由RedHat公司开发的，GFS文件系统允许多个服务同时读写一个磁盘分区，通过GFS可以实现数据的集中管理，免去了数据同步和拷贝的麻烦，但GFS并不能孤立的存在，安装GFS需要RHCS的底层组件支持，是一个基于 GFS的先进的集群文件系统，能够同步每台主机的集群文件系统的metadata。</p>
+<p><strong>CLVM</strong>: Cluster逻辑卷管理，即CLVM，是LVM的扩展，这种扩展允许cluster中的机器使用LVM来管理共享存储，但是配置之前需要开启lvm支持集群功能。</p>
+<p><strong>ISCSI</strong>: 又称为IP-SAN，是一种基于因特网及SCSI-3协议下的存储技术。由于其部署成本低，且维护简单，故选择IP-SAN作为本次实验的对象。</p>
+<h3 id="架构图"><a href="#架构图" class="headerlink" title="架构图"></a>架构图</h3><p><img src="https://github.com/spirit1234/blog_image/blob/master/image/ip-san/framework.png?raw=true" alt="enter image description here"></p>
+<p>由于硬件设施，本实验仅演示3台服务器，用户通过访问nginx服务器实现负载均衡，为两台应用服务器降低压力，nginx服务器搭建过于简单，所以就不演示了。这里应用服务器1和应用服务器2通过CLVM和GFS2进行共享ISCSI存储，实现同步。</p>
+<h3 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h3><p>Centos7 mini系统</p>
+<p>Nginx服务器   IP: 192.168.1.110/24</p>
+<p>Apache服务器两台   IP: 192.168.1.111/24 &nbsp;&nbsp;IP: 192.168.1.112/24<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (应用服务器1)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(应用服务器2)</p>
+<p>SAN存储服务器 IP: 192.168.1.113/24</p>
+<h3 id="开始实验"><a href="#开始实验" class="headerlink" title="开始实验"></a>开始实验</h3><h4 id="一-nbsp-各服务器环境配置"><a href="#一-nbsp-各服务器环境配置" class="headerlink" title="一. &nbsp;各服务器环境配置"></a>一. &nbsp;各服务器环境配置</h4><p>这里将两个Apache服务器记作node1和node2，iscsi存储服务器记作storage。<br>1.&nbsp;配置网络</p>
+<blockquote>
+<p>[node1&amp;node2&amp;storage]# vim /etc/sysconfig/network-scripts/ifcfg-ens33</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">TYPE=Ethernet</span><br><span class="line">PROXY_METHOD=none</span><br><span class="line">BROWSER_ONLY=no</span><br><span class="line">BOOTPROTO=static</span><br><span class="line">DEFROUTE=yes</span><br><span class="line">IPV4_FAILURE_FATAL=no</span><br><span class="line">IPV6INIT=yes</span><br><span class="line">IPV6_AUTOCONF=yes</span><br><span class="line">IPV6_DEFROUTE=yes</span><br><span class="line">IPV6_FAILURE_FATAL=no</span><br><span class="line">IPV6_ADDR_GEN_MODE=stable-privacy</span><br><span class="line">NAME=ens33</span><br><span class="line">UUID=dfc19c76-8597-4fa2-af12-dea15154d391</span><br><span class="line">DEVICE=ens33</span><br><span class="line">ONBOOT=yes</span><br><span class="line">IPADDR=192.168.1.111</span><br><span class="line">NETMASK=255.255.255.0</span><br><span class="line">GATEWAY=192.168.1.1</span><br></pre></td></tr></table></figure>
+<p>2.&nbsp;重启网卡</p>
+<blockquote>
+<p>[node1&amp;node2&amp;storage] systemctl restart network </p>
+</blockquote>
+<p>3.&nbsp;关闭防火墙</p>
+<blockquote>
+<p>[node1&amp;node2&amp;storage]# systemctl stop firewalld</p>
+</blockquote>
+<p>4.&nbsp;禁止防火墙开机自启</p>
+<blockquote>
+<p>[node1&amp;node2&amp;storage]# systemctl disable firewalld</p>
+</blockquote>
+<p>5.&nbsp;修改各服务器主机名</p>
+<blockquote>
+<p>[node1]# hostnamectl set-hostname a1.spirit.com<br>[node2]# hostnamectl set-hostname a2.spirit.com<br>[storage]# hostnamectl set-hostname storage.spirit.com</p>
+</blockquote>
+<p>6.&nbsp;修改hosts文件</p>
+<blockquote>
+<p>[node1]# vim /etc/hosts</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">192.168.1.111 a1.spirit.com</span><br><span class="line">192.168.1.112 a2.spirit.com</span><br><span class="line">192.168.1.113 storage.spirit.com</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>[node1]# scp /etc/hosts a2.spirit.com:/etc/hosts<br>[node1]# scp /etc/hosts storage.spirit.com:/etc/hosts</p>
+</blockquote>
+<p>7.&nbsp;给各服务器配置DNS解析</p>
+<blockquote>
+<p>[node1&amp;node2&amp;storage]# vim /etc/resolv.conf</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nameserver 114.114.114.114</span><br></pre></td></tr></table></figure>
+<p>8.&nbsp;关闭selinux(启用selinux后GFS2读写性能降低一半)</p>
+<blockquote>
+<p>[node1&amp;node2&amp;storage]# sed -i.bak “s/SELINUX=enforcing/SELINUX=disabled/g” /etc/selinux/config</p>
+</blockquote>
+<p>9.&nbsp;搭建ntp服务器(进行时间同步)</p>
+<blockquote>
+<p>[node1&amp;node2&amp;storage]# yum install -y ntp<br>[storage]# vim /etc/ntpd</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#server 0.centos.pool.ntp.org iburst</span><br><span class="line">#server 1.centos.pool.ntp.org iburst</span><br><span class="line">#server 2.centos.pool.ntp.org iburst</span><br><span class="line">#server 3.centos.pool.ntp.org iburst</span><br><span class="line">server 127.127.1.0 iburst</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>[storage]# systemctl start ntpd<br>[storage]# systemctl enable ntpd<br>[node1&amp;node2]# vim /etc/ntp.conf</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">#server 0.centos.pool.ntp.org iburst</span><br><span class="line">#server 1.centos.pool.ntp.org iburst</span><br><span class="line">#server 2.centos.pool.ntp.org iburst</span><br><span class="line">#server 3.centos.pool.ntp.org iburst</span><br><span class="line">#配置上游时间服务器为本地的ntpd Server服务器</span><br><span class="line">server 192.168.1.113</span><br><span class="line">#配置允许上游时间服务器主动修改本机的时间</span><br><span class="line">restrict 192.168.1.113 nomodify notrap noquery</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>[node1&amp;node2]# ntpdate -u 192.168.1.113<br>[node1&amp;node2]# systemctl start ntpd<br>[node1&amp;node2]# systemctl enable ntpd</p>
+</blockquote>
+<p>10.重启(让selinx配置文件生效)</p>
+<blockquote>
+<p>[node1&amp;node2&amp;storage]# reboot</p>
+</blockquote>
+<h4 id="二-nbsp-搭建集群"><a href="#二-nbsp-搭建集群" class="headerlink" title="二.&nbsp;搭建集群"></a>二.&nbsp;搭建集群</h4><p>1.&nbsp;安装集群软件</p>
+<blockquote>
+<p>[node1&amp;node2]# yum -y install pacemaker pcs</p>
+</blockquote>
+<p>2.&nbsp;启动服务并设置开机启动</p>
+<blockquote>
+<p>[node1&amp;node2]# systemctl start pcsd<br>[node1&amp;node2]# systemctl enable pcsd</p>
+</blockquote>
+<p>3.&nbsp;修改集群管理员密码</p>
+<blockquote>
+<p>[node1&amp;node2]#  passwd hacluster</p>
+</blockquote>
+<p>4.&nbsp;建立认证</p>
+<blockquote>
+<p>[node1/node2]# pcs cluster auth a1.spirit.com a2.spirit.com<br>Username: hacluster<br>Password:<br>a2.spirit.com: Authorized<br>a1.spirit.com: Authorized</p>
+</blockquote>
+<p>5.&nbsp;配置集群</p>
+<blockquote>
+<p>[node1/node2]#  pcs cluster setup –name ha_cluster a1.spirit.com a2.spirit.com</p>
+</blockquote>
+<p>6.&nbsp;启动集群</p>
+<blockquote>
+<p>[node1/node2]# pcs cluster start –all</p>
+</blockquote>
+<p>7.&nbsp;设置集群开机启动</p>
+<blockquote>
+<p>[node1/node2]# pcs cluster enable –all </p>
+</blockquote>
+<p>8.&nbsp;查看集群状态</p>
+<blockquote>
+<p>[node1/node2]# pcs status cluster<br>  PCSD Status:<br>  a1.spirit.com: Online<br>  a2.spirit.com: Online</p>
+</blockquote>
+<p>9.&nbsp;查看corosync状态</p>
+<blockquote>
+<p>[node1/node2]# pcs status corosync<br>    Nodeid      Votes Name<br>         1          1 a1.spirit.com (local)<br>         2          1 a2.spirit.com</p>
+</blockquote>
+<h4 id="三-nbsp-创建ISCSI共享存储"><a href="#三-nbsp-创建ISCSI共享存储" class="headerlink" title="三.&nbsp;创建ISCSI共享存储"></a>三.&nbsp;创建ISCSI共享存储</h4><p>1.&nbsp;安装配置工具</p>
+<blockquote>
+<p>[storage]# yum install -y  targetcli</p>
+</blockquote>
+<p>2.&nbsp;创建文件存储类型</p>
+<blockquote>
+<p>[storage]# targetcli<br>/&gt; cd /backstores/fileio<br>/backstores/fileio&gt; create disk01 /tmp/disk01.img 4G   (在/tmp/下分出4G空间作为存储)<br>Created fileio disk01 with size 4294967296</p>
+</blockquote>
+<p>3.&nbsp;配置iscsi共享</p>
+<blockquote>
+<p>/backstores/fileio&gt; cd /iscsi<br>/iscsi&gt; create iqn.2019-04.spirit.com:storage.target01<br>/iscsi&gt; cd iqn.2019-04.spirit.com:storage.target01/tpg1/luns<br>/iscsi/iqn.20…t01/tpg1/luns&gt; create /backstores/fileio/disk01<br>/iscsi/iqn.20…t01/tpg1/luns&gt; cd ../acls<br>/iscsi/iqn.20…t01/tpg1/acls&gt; create iqn.2019-04.spirit.com:node1<br>/iscsi/iqn.20…t01/tpg1/acls&gt; cd iqn.2019-04.spirit.com:node1<br>/iscsi/iqn.20…rit.com:node1&gt; set auth userid=spirit<br>/iscsi/iqn.20…rit.com:node1&gt; set auth password=spirit<br>/iscsi/iqn.20…rit.com:node1&gt; cd ..<br>/iscsi/iqn.20…t01/tpg1/acls&gt; create iqn.2019-04.spirit.com:node2<br>/iscsi/iqn.20…t01/tpg1/acls&gt; cd iqn.2019-04.spirit.com:node2<br>/iscsi/iqn.20…rit.com:node2&gt; set auth userid=spirit<br>/iscsi/iqn.20…rit.com:node2&gt; set auth password=spirit<br>/iscsi/iqn.20…rit.com:node2&gt; exit</p>
+</blockquote>
+<h4 id="四-nbsp-配置两个Apache服务器访问存储设备"><a href="#四-nbsp-配置两个Apache服务器访问存储设备" class="headerlink" title="四.&nbsp;配置两个Apache服务器访问存储设备"></a>四.&nbsp;配置两个Apache服务器访问存储设备</h4><p>1.&nbsp;安装iscsi软件包</p>
+<blockquote>
+<p>[node1&amp;node2]# yum install iscsi-initiator-utils -y</p>
+</blockquote>
+<p>2.&nbsp;配置initiatorname</p>
+<blockquote>
+<p>[node1]# vim /etc/iscsi/initiatorname.iscsi</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">InitiatorName=iqn.2019-04.spirit.com:node1</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>[node2]# vim /etc/iscsi/initiatorname.iscsi</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">InitiatorName=iqn.2019-04.spirit.com:node2</span><br></pre></td></tr></table></figure>
+
+<p>3.&nbsp;配置访问时的账号密码</p>
+<blockquote>
+<p>[node1&amp;node2]# vim /etc/iscsi/iscsid.conf</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">57 node.session.auth.authmethod = CHAP</span><br><span class="line">58 # To set a CHAP username and password for initiator</span><br><span class="line">59 # authentication by the target(s), uncomment the following lines:</span><br><span class="line">60 node.session.auth.username = spirit</span><br><span class="line">61 node.session.auth.password = spirit</span><br></pre></td></tr></table></figure>
+<p>4.&nbsp;重启iscsid服务</p>
+<blockquote>
+<p>[node1&amp;node2]# systemctl restart iscsid</p>
+</blockquote>
+<p>5.&nbsp;发现后端存储</p>
+<blockquote>
+<p>[node1&amp;node2]# iscsiadm -m discovery -t sendtargets -p 192.168.1.113:3260</p>
+</blockquote>
+<p>6.&nbsp;登录后端存储</p>
+<blockquote>
+<p>[node1&amp;node2]# iscsiadm -m node -T iqn.2019-04.spirit.com:storage.target01 -l</p>
+</blockquote>
+<h4 id="五-nbsp-配置CLVM和GFS2"><a href="#五-nbsp-配置CLVM和GFS2" class="headerlink" title="五.&nbsp;配置CLVM和GFS2"></a>五.&nbsp;配置CLVM和GFS2</h4><p>1.&nbsp;安装Fence、CLVM、GFS2包</p>
+<blockquote>
+<p>[node1&amp;node2]# yum -y install fence-agents-all lvm2-cluster gfs2-utils</p>
+</blockquote>
+<p>2.&nbsp;配置集群LVM</p>
+<blockquote>
+<p>[node1&amp;node2]# lvmconf –enable-cluster</p>
+</blockquote>
+<p>3.重启(使CLVM生效)</p>
+<blockquote>
+<p>[node1&amp;node2]# reboot</p>
+</blockquote>
+<p>4.&nbsp;配置集群资源</p>
+<blockquote>
+<p>[node1/node2]# pcs property set stonith-enabled=false</p>
+<p>[node1/node2]# pcs property set no-quorum-policy=ignore</p>
+<p>[node1/node2]# pcs resource create dlm ocf:pacemaker:controld allow_stonith_disabled=true op monitor interval=30s clone interleave=true ordered=true</p>
+<p>[node1/node2]# pcs resource create clvmd ocf:heartbeat:clvm op monitor interval=30s clone interleave=true ordered=true</p>
+<p>[node1/node2]# pcs constraint order start dlm-clone then clvmd-clone</p>
+<p>[node1/node2]# pcs constraint colocation add clvmd-clone with dlm-clone</p>
+</blockquote>
+<p>5.&nbsp;禁止集群投票</p>
+<blockquote>
+<p>[node1/node2]# pcs property set no-quorum-policy=freeze</p>
+</blockquote>
+<p>6.&nbsp;共享存储分区</p>
+<blockquote>
+<p>[node1/node2]# fdisk /dev/sdb<br>Command (m for help): n<br>Partition type:<br>p&nbsp;&nbsp;&nbsp;primary (0 primary, 0 extended, 4 free)<br>e&nbsp;&nbsp;&nbsp;extended<br>Select (default p): p<br>Partition number (1-4, default 1):<br>First sector (8192-8388607, default 8192):<br>Using default value 8192<br>Last sector, +sectors or +size{K,M,G} (8192-8388607, default 8388607):<br>Using default value 8388607<br>Partition 1 of type Linux and of size 4 GiB is set<br>Command (m for help): w<br>The partition table has been altered!</p>
+</blockquote>
+<h4 id="六-nbsp-创建CLVM并且格式化成GFS2"><a href="#六-nbsp-创建CLVM并且格式化成GFS2" class="headerlink" title="六.&nbsp;创建CLVM并且格式化成GFS2"></a>六.&nbsp;创建CLVM并且格式化成GFS2</h4><p>1.&nbsp;创建物理卷</p>
+<blockquote>
+<p>[node1/node2]# pvcreate /dev/sdb1</p>
+</blockquote>
+<p>2.&nbsp;创建集群卷组</p>
+<blockquote>
+<p>[node1/node2]# vgcreate -cy vg_cluster /dev/sdb1</p>
+</blockquote>
+<p>3.&nbsp;创建逻辑卷</p>
+<blockquote>
+<p>[node1/node2]# lvcreate -l100%FREE -n lv_cluster vg_cluster</p>
+</blockquote>
+<p>4.&nbsp;格式化成GFS2文件系统</p>
+<blockquote>
+<p>[node1/node2]# mkfs.gfs2 -p lock_dlm -t ha_cluster:gfs2 -j 2 /dev/vg_cluster/lv_cluster</p>
+</blockquote>
+<h4 id="七-nbsp-挂载实现共享存储"><a href="#七-nbsp-挂载实现共享存储" class="headerlink" title="七.&nbsp;挂载实现共享存储"></a>七.&nbsp;挂载实现共享存储</h4><p>1.&nbsp;在两个Apache服务器上安装 httpd</p>
+<blockquote>
+<p>[node1&amp;node2]# yum install -y httpd</p>
+</blockquote>
+<p>2.&nbsp;将共享存储加入集群资源中</p>
+<blockquote>
+<p>[node1/node2]# pcs resource create fs_gfs2 Filesystem device=”/dev/vg_cluster/lv_cluster” directory=”/var/www/html” fstype=”gfs2” options=”noatime,nodiratime” op monitor interval=10s clone interleave=true</p>
+</blockquote>
+<p>3.&nbsp;设置CLVM和GFS2服务启动顺序</p>
+<blockquote>
+<p>[node1/node2]# pcs constraint order start clvmd-clone then fs_gfs2-clone</p>
+</blockquote>
+<p>4.&nbsp;绑定CLVM和GFS2服务启动顺序</p>
+<blockquote>
+<p>[node1/node2]# pcs constraint colocation add fs_gfs2-clone with clvmd-clone</p>
+</blockquote>
+<p>5.&nbsp;查看是否挂载上</p>
+<blockquote>
+<p>[node1/node2]# df<br>/dev/mapper/vg_cluster-lv_cluster   4185696   34952   4150744   1% /var/www/html</p>
+</blockquote>
+<p>6.&nbsp;检测是否存储同步</p>
+<blockquote>
+<p>[node1]# echo ‘apache1’ &gt; /var/www/html/index.html<br>[node2]# cat /var/www/html/index.html<br>apache1</p>
+</blockquote>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><blockquote>
+<p>实验中可能遇到的问题: 创建逻辑卷时报错</p>
+<p>解决办法:<br>[node1&amp;node2]# lvmconf –enable-cluster<br>[storage]# systemctl restart target<br>[node1&amp;node2]# reboot  </p>
+</blockquote>
+
+            <!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->
+            <audio id="audio" loop="1" preload="auto" controls="controls" data-autoplay="true">
+                <source type="audio/mpeg" src="">
+            </audio>
+            
+                <ul id="audio-list" style="display:none">
+                    
+                        <li title='0' data-url='h'></li>
+                    
+                        <li title='1' data-url='t'></li>
+                    
+                        <li title='2' data-url='t'></li>
+                    
+                        <li title='3' data-url='p'></li>
+                    
+                        <li title='4' data-url=':'></li>
+                    
+                        <li title='5' data-url='/'></li>
+                    
+                        <li title='6' data-url='/'></li>
+                    
+                        <li title='7' data-url='4'></li>
+                    
+                        <li title='8' data-url='5'></li>
+                    
+                        <li title='9' data-url='.'></li>
+                    
+                        <li title='10' data-url='7'></li>
+                    
+                        <li title='11' data-url='6'></li>
+                    
+                        <li title='12' data-url='.'></li>
+                    
+                        <li title='13' data-url='4'></li>
+                    
+                        <li title='14' data-url='9'></li>
+                    
+                        <li title='15' data-url='.'></li>
+                    
+                        <li title='16' data-url='1'></li>
+                    
+                        <li title='17' data-url='8'></li>
+                    
+                        <li title='18' data-url='4'></li>
+                    
+                        <li title='19' data-url=':'></li>
+                    
+                        <li title='20' data-url='1'></li>
+                    
+                        <li title='21' data-url='0'></li>
+                    
+                        <li title='22' data-url='0'></li>
+                    
+                        <li title='23' data-url='4'></li>
+                    
+                        <li title='24' data-url='3'></li>
+                    
+                        <li title='25' data-url='/'></li>
+                    
+                        <li title='26' data-url='F'></li>
+                    
+                        <li title='27' data-url='r'></li>
+                    
+                        <li title='28' data-url='i'></li>
+                    
+                        <li title='29' data-url='e'></li>
+                    
+                        <li title='30' data-url='n'></li>
+                    
+                        <li title='31' data-url='d'></li>
+                    
+                        <li title='32' data-url='s'></li>
+                    
+                        <li title='33' data-url='h'></li>
+                    
+                        <li title='34' data-url='i'></li>
+                    
+                        <li title='35' data-url='p'></li>
+                    
+                        <li title='36' data-url='s'></li>
+                    
+                        <li title='37' data-url='.'></li>
+                    
+                        <li title='38' data-url='m'></li>
+                    
+                        <li title='39' data-url='p'></li>
+                    
+                        <li title='40' data-url='3'></li>
+                    
+                        <li title='bold' data-url='[1mhttp://45.76.49.184:10043/Friendships.mp3[22m'></li>
+                    
+                        <li title='strip' data-url='http://45.76.49.184:10043/Friendships.mp3'></li>
+                    
+                        <li title='stripColors' data-url='http://45.76.49.184:10043/Friendships.mp3'></li>
+                    
+                        <li title='trap' data-url='ĦŁŦǷ://45.76.49.184:10043/ӺɌ༏ξƝԃϨҺ༏Ƿϟ.ԠҎ3'></li>
+                    
+                        <li title='zalgo' data-url='h̶̷̩̩̱͎̤͙̺̥̯̗͖͉̥̼̪̼̱͙̠͖̠͎̪̻͚͙͔̥̖̠͖̞̎̿ͫ͗̿̂̂̚͜t̵͔͉͙̮̱͖͙̭̙̬̱̩͎̗̱͚̞̻̦̦̺̠͙̗̞̱̫̼̻̠̫̣̪͔͑́͌̄ͧͧͥ̆̔̓̓̋̾ͭ̄ͨ̂́͜ͅͅţ̝͔̥̥̹̪̙͖̗͓̣̯̜͉̻̙̹͓̦͍̘̝̜͙̬͈̖͖͓̱̲͙̜̮̭̹̩͎͖̹̺͍̯̳̖̥̝̥̙̟̹̤͙̞̬̰͉̗̳̫̤̦͇̜̋̐͌͋̕͞ͅp̷̥̬̱̩̦̼̗̞̱̱͔̘̰̘̜͈͚̤͇͈̦͙̞͇͎̞͈̩̼̳̩̠̪̦̬̟̤͉̭͎͚͖̹̹̭̥̳̰͎̳̝̠͗̇̒̑̾͗̿̏̔̒ͥͤ͂̂̋̚͜͢͡ͅͅͅ:̵̵̵̡̦̪̦̣̼͔͔̗͓͇͎̣̜̑̄̒̅͢/̴̢̹̲͚̝̞͚̲̖̮͔̬̳̜̫͕̗̮̬̱̫̭̰͋ͮ̂̀̊̽̽̔ͮ̈̃̂͐̄̓ͅ/̸̻̹͎̤͖̝̘͈͈͍̪̥̜̖̙̳̝͈̱̫̟̩̺̥̬̥̘̜͓̝̩̟̙͚͔̼̩͉̪̰̮̜ͮͦ̇̑̑̓̐̆͗̊̔͠͡ͅ4̢̢̛̛̖̳͔̙̰̹͎ͫ͒ͮ̊̿̈̅̉̓ͨ̑͘5̠̰̺͇͍̟͈̙̳̗̪̣͕̙͍̰̤̺̥͉͓̤͚͓̞̫͓̯̬̤̫̗̝̘̲͎͚̳̦̝͑͐̍̾ͮ̿͂̒̓́̀͘͢͡ͅ.̵̔̐̍͆ ҉̨̡̣̟̖̥̟̻̟̱̙͖̠̞͔̥͇̟̜̩͇̗̲̟̮̰̠͔̟̮͜ͅ7̸̵̨̩̞̞̱͖͍͎̙̭̺̪͍̘͙̯̙̺̱̭̹ͨͭͤ͆ͯ͒ͮͦ̃ͭ͑̑͒ͪ͢6ͨ̋͂̿ͤͧͨ̓̉͒̈̈ͭ̄ͭ̉ͩ̏͠ ҉̬̹̩̫̦̟̥̯̟͎͕̘̜̙̖̜̗͉̳̗̹͕̻̼͔̮̹͈̥͖̞̝̭͓̙̞̖̬̥͓̫̯̩̟̯̘͖̮̣̺̲̪͈͕͉̦̱̘̥͢͡ͅ.̮̤̬̝̫͈͔̱̬͈̘̪̩̱̣̪̠̫̮̗̦͓̫̲͇̩̦͕͉̣͙͖̠̮̺͎̥̥̦̣͓͖̯̗̺̝͉͇͉́ͤ̋ͣ͛͆͑͆̎͐ͯ̓ͧ͗͋̍͗̑́͟ͅͅ4̴͍̺͉̯̦̪̻̜̱̠̩͎͉̪̟̣̱̺͖͕̟͖̬͙̜̪̹͔̇̌̂͋̀ͬ̊̑ͩͥͤ̉̐̾͆ͩͮ̏́̚͘͞ͅͅ9̡̢͓̰͕̱͎̭͙̘̺̖͇̠̩̙̺̪͔͖̬̼̤͇̥͈̰̫͓̮̻̱̺̼̥̎̏̄̈̉͊̑̓́͜.̨̨͖̗̜̮̬͓̲̮͍̺̻̜̹͚̤̞̘̰̱̻̲̜̱̹͉͈͚̻̯̫̬͓̹̼̙̱͔̭͉̤̮̜̺̟̼̰̮̗̼̞̣̫̘̱͎͉͔͍̬̭͓̰ͤͣ̅̍̓́̋̽ͩ̾̈͌ͭ̄̋̏ͨ1̵̯͔͙͎͍̺͇̼̠͉̰̗͒͋ͣ̍ͤ͌͠8̶̻̳̯̘̯͎͈̣͖͎̥͚̻̖̜̼̻̞̜̙͈̳͇̮̙͉͎͎̲̲̣̙͚̠̯̟͎͕̝̩̼̰̣̬͉͓͌͛̃̓̉͐̊̎̾̿̈͂ͯ̉͘͟͟4̨̘͖͇̬̫̺͙̦̥̜̳̭̣̘̓̌ͤ̏́̌ͦ̾̆̂͢:̟̯̹̤̻͖̰͚̩̫̙̘̫͇͇̝̲̱̪̼̝̰̜̞̺̜̯̝̩̩ͣͤ̅ͦͩ̉̐̋̂̃̐͋͆̈̏̾̃̿̀̚̕͟1̵͈͎̯̲̤̟̯̘͚͓̙͎̮̱̬͎̰̜͚̥̫̠̰͔̞̰͕̘̗̭̖̺͉̫̻͎͉̘̞͔̩͔̭̯̺̞̠̙͙͉͓̭ͮ͂̑̒̀͝ͅ0̎̈͐̅̄ͤ̃̑̈̈̚ ҉̠̳͚̩̥̦̮̮̪͓̠̰̞̘̭͓͕̦͈̲͙̙̜͇̘̞͚̦̠͈̲͕̦̘͓̬̹͖͙͕̬̝̰̥͢ͅͅ0̩̹͉͖̻̙͇̯̙̻͍͎̣̲͖̣̳͈͚̼̥͉̠͙͎̦̳̮̫͓̟͔̺̗͇̻͙̪̰̂̄ͣ̾̏̇̇̂̈̇͋ͥ̀̀͜͜͜4ͭ̒̓̿͑͊̃͋́̈͐̚ ҉̶̷̨̠̘̠̟͙̭̠̥̲̹͉͍͎̰̭͇̹͍̝͈͙͉̪͈̘̳̦̜͚̱͍̻̫̹̺̥̤̥̗͔̹͈͖̱̤̼̯̤͙̺̻͕̱̘̲ͅͅ3̵̴̧̳̘͎̤͔̟̦̘͚͓͙̰͔̦̺̮̳͕̮̗̱̘͎̩͍̙͍̗͍̻͚̱̓̈̑͌ͪ̉̍͌͗ͨ̓̓ͫ͆̈ͬ̋͜͠ͅ/̙͉͓̰͈̤̬̠̼̼͉̣̣̙̯̥̳͖͉͖̙̥̙̥͙̟̻͖̔̇́͗̐ͬ̔ͮͬ͋̃̈͟͡ͅͅͅF̎ͣ̇̎̐̾̾̄̌̿ͧ̄̋ͥͥ͞ ҉̡̬̞̘̙̖͚̹̮̘̝͇̜̳̝̤̩̼̫͔͎̮͚͉̣̠͖͓̥̳̻͖͔̮̖͇͉̮̟̰͓̭̲̼̀͡r̸̠̲̙̰̳̣͉̬̙̭̞̠̙͕̟͕̤͙͒̋͑͂̐ͩ̅̃̔͊ͤ́̚͢i̧͖̲̲̱̙̝͖͖̬̻͍̺̭̹̣̦̯̼̥͓̱̣͗ͩ̋ͩ̌ͬ̏̓͂̋ͦͬͩ̾͌ͭ̓́͘͟ͅe̴͖͎̦̤͚͉̪̣̙͇͈̟̰͉̻̙̟̞̾̿ͣ̅̓̃ͬ̌́͟͝͞n̸̼̩̱͔̹͔̰̱̥̤̖̮̙̫̹̲̭͍̪͍̖̥̙͎̤̻̟̝̹͂̓͂̍̈̃̄̒̓ͦͧ̈̎ͦ͟͠͠d̵̢̨̞̟̞̺̗̲̰͎̰̮̗̜̳̗͐̔̾̃ͫ̔́͐͒̿̅ͩ̈ͫͧ̊̉̐̚͜͠ś̢̭͚̭͚̠͎̩̩̦͚͍̠͕͖̼͛̐̎̃͑ͩ̄̎͛́͘͠͝ͅͅḩ̸̗̪̩͔͍̝̞̳̺̥͚̪̠͙̺̥͓̻͕͍͖̯̘̹͇̥̹͕̜̥̺̞͖͇̥͕̟̰͔̖̘̹̖͈̫̙̯̦ͮ̊́͒ͫ̄̾ͯ̅͞ͅį̵̬̻̝̪͇̯̩͖͙̥̼̗͚̙͎̣̻̲̤̬̺̰ͥ̋̎͊ͧ̈̓͑̆̐ͦͧ́̑͑͂̐ͯ̕͘͡ͅp̵̡̖̱̜̣̘͖̫̞͙̟̳͙̙͎̥̰͙͇͓̪̞̜̟͉͕̪̮̺̪̟͖͙̳͉̠̣̦̯̭̳̦̲̗͔̱̯̪̯̠̹̥̱̹̤͚͖͇̦̔͋͑͐̓͢͢s̢̳̼̼͍͚̦̬̫̜̫͈̜̰̜̹̙̮̦̯͉̪͍̭̝̤̥̻͖̯̼͍̙̖̰̻̮̭̫͔̘̥̺͓̹͚̫̱̭̮̼̳͓̝͖̭̱ͨ̎̿̇̓͆͒͊͐ͮ͗͆̇̈͟͡ͅͅͅ.̸̧̗͓͚̠͙̣͍̠͕̺̺̼̻͔͎͕̘̖͎̭̬͔̣ͮ̒͛͛̓ͫͯͯ̈̾̋ͩ͐̃̓ͯͮ̕̕mͫ͌ͭ̀̄̄̈͊ͬͯ͛ͤ̂ͤ͊ ҉̸̵̫͍̤̭̬̼̱̖̦̞̟̹̮̪͙̳̳̠̙̣̼̭̙̘̩͕̮̫̙̜̱̲͎̯̦͚̹̜̝̲̩̭͎̩͓͓͇͚͘ͅp̶̶̳͕̖̟̭͔̟̻̱͉̹͇͔̱̩̬͈͍̪̹͖̥̤̗͎̖̼̩͎̫͖͎̟̯͉̝̑ͥ̅̍̌̃͟3̷̧̺̰̰̯̦̗̼̬̹̫͔͎̲̖͓̠͙͈̝̫̮̝͍̝̪͍̻͉̩͍͇̰̖͉̯̥͈͉̠̫̬̻̯͖̥͓͓̜̥͕̜̳͕͙̮͕̖͎̹̞̘̣̙̘̣ͨ͂̐̀̔̾͛́ͬͩ͊̈͐͂̃ͅͅ'></li>
+                    
+                        <li title='zebra' data-url='h[7mt[27mt[7mp[27m:[7m/[27m/[7m4[27m5[7m.[27m7[7m6[27m.[7m4[27m9[7m.[27m1[7m8[27m4[7m:[27m1[7m0[27m0[7m4[27m3[7m/[27mF[7mr[27mi[7me[27mn[7md[27ms[7mh[27mi[7mp[27ms[7m.[27mm[7mp[27m3'></li>
+                    
+                        <li title='rainbow' data-url='[31mh[39m[33mt[39m[32mt[39m[34mp[39m[35m:[39m[31m/[39m[33m/[39m[32m4[39m[34m5[39m[35m.[39m[31m7[39m[33m6[39m[32m.[39m[34m4[39m[35m9[39m[31m.[39m[33m1[39m[32m8[39m[34m4[39m[35m:[39m[31m1[39m[33m0[39m[32m0[39m[34m4[39m[35m3[39m[31m/[39m[33mF[39m[32mr[39m[34mi[39m[35me[39m[31mn[39m[33md[39m[32ms[39m[34mh[39m[35mi[39m[31mp[39m[33ms[39m[32m.[39m[34mm[39m[35mp[39m[31m3[39m'></li>
+                    
+                        <li title='random' data-url='[96mh[39m[35mt[39m[7mt[27m[90mp[39m[34m:[39m[4m/[24m[34m/[39m[37m4[39m[36m5[39m[90m.[39m[34m7[39m[31m6[39m[37m.[39m[36m4[39m[90m9[39m[96m.[39m[35m1[39m[91m8[39m[36m4[39m[94m:[39m[97m1[39m[4m0[24m[93m0[39m[94m4[39m[37m3[39m[32m/[39m[94mF[39m[37mr[39m[32mi[39m[90me[39m[34mn[39m[93md[39m[97ms[39m[93mh[39m[36mi[39m[97mp[39m[32ms[39m[91m.[39m[7mm[27m[91mp[39m[37m3[39m'></li>
+                    
+                        <li title='america' data-url='[31mh[39m[37mt[39m[34mt[39m[31mp[39m[37m:[39m[34m/[39m[31m/[39m[37m4[39m[34m5[39m[31m.[39m[37m7[39m[34m6[39m[31m.[39m[37m4[39m[34m9[39m[31m.[39m[37m1[39m[34m8[39m[31m4[39m[37m:[39m[34m1[39m[31m0[39m[37m0[39m[34m4[39m[31m3[39m[37m/[39m[34mF[39m[31mr[39m[37mi[39m[34me[39m[31mn[39m[37md[39m[34ms[39m[31mh[39m[37mi[39m[34mp[39m[31ms[39m[37m.[39m[34mm[39m[31mp[39m[37m3[39m'></li>
+                    
+                        <li title='reset' data-url='[0mhttp://45.76.49.184:10043/Friendships.mp3[0m'></li>
+                    
+                        <li title='dim' data-url='[2mhttp://45.76.49.184:10043/Friendships.mp3[22m'></li>
+                    
+                        <li title='italic' data-url='[3mhttp://45.76.49.184:10043/Friendships.mp3[23m'></li>
+                    
+                        <li title='underline' data-url='[4mhttp://45.76.49.184:10043/Friendships.mp3[24m'></li>
+                    
+                        <li title='inverse' data-url='[7mhttp://45.76.49.184:10043/Friendships.mp3[27m'></li>
+                    
+                        <li title='hidden' data-url='[8mhttp://45.76.49.184:10043/Friendships.mp3[28m'></li>
+                    
+                        <li title='strikethrough' data-url='[9mhttp://45.76.49.184:10043/Friendships.mp3[29m'></li>
+                    
+                        <li title='black' data-url='[30mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='red' data-url='[31mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='green' data-url='[32mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='yellow' data-url='[33mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='blue' data-url='[34mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='magenta' data-url='[35mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='cyan' data-url='[36mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='white' data-url='[37mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='gray' data-url='[90mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='grey' data-url='[90mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='brightRed' data-url='[91mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='brightGreen' data-url='[92mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='brightYellow' data-url='[93mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='brightBlue' data-url='[94mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='brightMagenta' data-url='[95mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='brightCyan' data-url='[96mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='brightWhite' data-url='[97mhttp://45.76.49.184:10043/Friendships.mp3[39m'></li>
+                    
+                        <li title='bgBlack' data-url='[40mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgRed' data-url='[41mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgGreen' data-url='[42mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgYellow' data-url='[43mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgBlue' data-url='[44mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgMagenta' data-url='[45mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgCyan' data-url='[46mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgWhite' data-url='[47mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgGray' data-url='[100mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgGrey' data-url='[100mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgBrightRed' data-url='[101mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgBrightGreen' data-url='[102mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgBrightYellow' data-url='[103mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgBrightBlue' data-url='[104mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgBrightMagenta' data-url='[105mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgBrightCyan' data-url='[106mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='bgBrightWhite' data-url='[107mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='blackBG' data-url='[40mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='redBG' data-url='[41mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='greenBG' data-url='[42mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='yellowBG' data-url='[43mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='blueBG' data-url='[44mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='magentaBG' data-url='[45mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='cyanBG' data-url='[46mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                        <li title='whiteBG' data-url='[47mhttp://45.76.49.184:10043/Friendships.mp3[49m'></li>
+                    
+                </ul>
+            
+        </div>
+        
+    <div id='gitalk-container' class="comment link"
+        data-ae='false'
+        data-ci='36c3e141ba1b7d4106ef'
+        data-cs='4fbe41378a22ef3b9b2cf91cf3ce4895aa2723d8'
+        data-r='jjq-spirit.github.io'
+        data-o='jjq-spirit'
+        data-a='jjq-spirit'
+        data-d='true'
+    >查看评论</div>
+
+
+    </div>
+    
+        <div class='side'>
+            <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#简介"><span class="toc-text">简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#架构图"><span class="toc-text">架构图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#环境准备"><span class="toc-text">环境准备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#开始实验"><span class="toc-text">开始实验</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#一-nbsp-各服务器环境配置"><span class="toc-text">一.  各服务器环境配置</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#二-nbsp-搭建集群"><span class="toc-text">二. 搭建集群</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#三-nbsp-创建ISCSI共享存储"><span class="toc-text">三. 创建ISCSI共享存储</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#四-nbsp-配置两个Apache服务器访问存储设备"><span class="toc-text">四. 配置两个Apache服务器访问存储设备</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#五-nbsp-配置CLVM和GFS2"><span class="toc-text">五. 配置CLVM和GFS2</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#六-nbsp-创建CLVM并且格式化成GFS2"><span class="toc-text">六. 创建CLVM并且格式化成GFS2</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#七-nbsp-挂载实现共享存储"><span class="toc-text">七. 挂载实现共享存储</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#小结"><span class="toc-text">小结</span></a></li></ol></li></ol>
+        </div>
+    
+</div>
+
+
+    </div>
+</div>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginModelPath":"assets/","model":{"jsonPath":"/live2dw/assets/hibiki.model.json"},"display":{"position":"left","width":200,"height":435,"hOffset":-5},"mobile":{"show":false},"react":{"opacity":0.8},"dialog":{"enable":true,"hitokoto":true},"log":false,"pluginJsPath":"lib/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script src="//lib.baomitu.com/jquery/1.8.3/jquery.min.js"></script>
+<script src="/js/plugin.js"></script>
+<script src="/js/diaspora.js"></script>
+<link rel="stylesheet" href="/photoswipe/photoswipe.css">
+<link rel="stylesheet" href="/photoswipe/default-skin/default-skin.css">
+<script src="/photoswipe/photoswipe.min.js"></script>
+<script src="/photoswipe/photoswipe-ui-default.min.js"></script>
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+            <div class="pswp__top-bar">
+                <!--  Controls are self-explanatory. Order can be changed. -->
+                <div class="pswp__counter"></div>
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                      <div class="pswp__preloader__cut">
+                        <div class="pswp__preloader__donut"></div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div> 
+            </div>
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-153135716-1', 'auto');
+  ga('send', 'pageview');
+</script>
+<!-- End Google Analytics -->
+
+
+</html>
