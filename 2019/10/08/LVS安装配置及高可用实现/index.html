@@ -1,0 +1,429 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hans" class="loading">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LVS安装配置及高可用实现 - 夜飘凌的博客</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="google" content="notranslate" />
+    <meta name="keywords" content="linux,"> 
+    <meta name="description" content="星夜，终究不胜寒凉。,LVS安装配置及高可用实现一. LVS-NAT模式搭建1.1 实验环境
+
+
+lvs.jjq.com
+apache1.jjq.com
+apache2.jjq.com
+client.jjq.com
+
+
+,"> 
+    <meta name="author" content="Night"> 
+    <link rel="alternative" href="atom.xml" title="夜飘凌的博客" type="application/atom+xml"> 
+    <link rel="icon" href="/img/night.png"> 
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+    <link rel="stylesheet" href="/css/diaspora.css">
+    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <script>
+         (adsbygoogle = window.adsbygoogle || []).push({
+              google_ad_client: "ca-pub-8691406134231910",
+              enable_page_level_ads: true
+         });
+    </script>
+    <script async custom-element="amp-auto-ads"
+        src="https://cdn.ampproject.org/v0/amp-auto-ads-0.1.js">
+    </script>
+</head>
+
+<body class="loading">
+    <span id="config-title" style="display:none">夜飘凌的博客</span>
+    <div id="loader"></div>
+    <div id="single">
+    <div id="top" style="display: block;">
+    <div class="bar" style="width: 0;"></div>
+    <a class="icon-home image-icon" href="javascript:;" target="_blank" rel="noopener" data-url="https://jjq-spirit.github.com"></a>
+    <div title="播放/暂停" class="icon-play"></div>
+    <h3 class="subtitle">LVS安装配置及高可用实现</h3>
+    <div class="social">
+        <!--<div class="like-icon">-->
+            <!--<a href="javascript:;" target="_blank" rel="noopener" class="likeThis active"><span class="icon-like"></span><span class="count">76</span></a>-->
+        <!--</div>-->
+        <div>
+            <div class="share">
+                <a title="获取二维码" class="icon-scan" href="javascript:;" target="_blank" rel="noopener"></a>
+            </div>
+            <div id="qr"></div>
+        </div>
+    </div>
+    <div class="scrollbar"></div>
+</div>
+
+    <div class="section">
+        <div class="article">
+    <div class='main'>
+        <h1 class="title">LVS安装配置及高可用实现</h1>
+        <div class="stuff">
+            <span>十月 08, 2019</span>
+            
+
+        </div>
+        <div class="content markdown">
+            <h1 id="LVS安装配置及高可用实现"><a href="#LVS安装配置及高可用实现" class="headerlink" title="LVS安装配置及高可用实现"></a>LVS安装配置及高可用实现</h1><h2 id="一-LVS-NAT模式搭建"><a href="#一-LVS-NAT模式搭建" class="headerlink" title="一. LVS-NAT模式搭建"></a>一. LVS-NAT模式搭建</h2><h3 id="1-1-实验环境"><a href="#1-1-实验环境" class="headerlink" title="1.1 实验环境"></a>1.1 实验环境</h3><table>
+<thead>
+<tr>
+<th align="center">lvs.jjq.com</th>
+<th align="center">apache1.jjq.com</th>
+<th align="center">apache2.jjq.com</th>
+<th align="center">client.jjq.com</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">eth0：192.168.32.112 <br> eth1：40.40.40.11</td>
+<td align="center">eth0：192.168.32.110</td>
+<td align="center">eth0：192.168.32.111</td>
+<td align="center">eth1：40.40.40.111</td>
+</tr>
+<tr>
+<td align="center">负载调度器</td>
+<td align="center">真实服务器1</td>
+<td align="center">真实服务器2</td>
+<td align="center">模拟客户端</td>
+</tr>
+<tr>
+<td align="center">-–</td>
+<td align="center">gw：lvs.jjq.com</td>
+<td align="center">gw：lvs.jjq.com</td>
+<td align="center">-–</td>
+</tr>
+</tbody></table>
+<h3 id="1-2-实验步骤"><a href="#1-2-实验步骤" class="headerlink" title="1.2 实验步骤"></a>1.2 实验步骤</h3><p>首先将四台机器做好时间同步，并配置好DNS实现域名的服务解析,关闭Selinux、Firewalld<br>对应关系如下：</p>
+<figure class="highlight basic"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">192.168.32.110</span>    ---&gt;     apache1</span><br><span class="line"><span class="number">192.168.32.111</span>    ---&gt;     apache2</span><br><span class="line"><span class="number">192.168.32.112</span>    ---&gt;     lvs</span><br><span class="line"><span class="number">40.40.40.11</span>       ---&gt;     lvsnat</span><br><span class="line"><span class="number">40.40.40.111</span>      ---&gt;     client</span><br></pre></td></tr></table></figure>
+<p><strong><font style="color: green">Real Servers:</font></strong></p>
+<ol>
+<li>安装Apache服务以便测试</li>
+</ol>
+<blockquote>
+<p>[apache1&amp;apache2]# yum install -y httpd</p>
+</blockquote>
+<ol start="2">
+<li>写入网页进行标记并启动服务</li>
+</ol>
+<blockquote>
+<p>[apache1&amp;apache2]# echo “apache1/apache2” &gt; /var/www/html/index.html &amp;&amp; systemctl start httpd</p>
+</blockquote>
+<ol start="3">
+<li>Real Server配置网关</li>
+</ol>
+<blockquote>
+<p>[apache1&amp;apache2]# route add -net 0.0.0.0/0 gw lvs  (临时添加，重启网卡失效)</p>
+</blockquote>
+<p><strong><font style="color: green">Director Server:</font></strong></p>
+<ol>
+<li>安装用户空间命令工具—ipvsadm</li>
+</ol>
+<blockquote>
+<p>[root@lvs ~]# yum install -y ipvsadm</p>
+</blockquote>
+<ol start="2">
+<li>开启路由转发</li>
+</ol>
+<blockquote>
+<p>[root@lvs ~]# echo “1” &gt; /proc/sys/net/ipv4/ip_forward (临时添加，永久添加可以改/etc/sysctl.conf文件)</p>
+</blockquote>
+<ol start="3">
+<li>为了使回包更稳定，添加一条防火墙规则，实现SNAT转换</li>
+</ol>
+<blockquote>
+<p>[root@lvs ~]# iptables -t nat -A POSTROUTING -s 192.168.32.0/24 -o eth1 -j SNAT –to-source 40.40.40.11</p>
+</blockquote>
+<ol start="4">
+<li>配置ipvs规则</li>
+</ol>
+<blockquote>
+<p>[root@lvs ~]# ipvsadm -A -t lvsnat:80 -s rr<br>[root@lvs ~]# ipvsadm -a -t lvsnat:80 -r apache1:80 -m   (-m指的是nat模式，-g指的是DR模式)<br>[root@lvs ~]# ipvsadm -a -t lvsnat:80 -r apache2:80 -m<br>[root@lvs ~]# service ipvsadm save  (保存就行了)</p>
+</blockquote>
+<h2 id="二-LVS-DR模式搭建"><a href="#二-LVS-DR模式搭建" class="headerlink" title="二. LVS-DR模式搭建"></a>二. LVS-DR模式搭建</h2><h3 id="2-1-实验环境"><a href="#2-1-实验环境" class="headerlink" title="2.1 实验环境"></a>2.1 实验环境</h3><table>
+<thead>
+<tr>
+<th align="center">lvs.jjq.com</th>
+<th align="center">apache1.jjq.com</th>
+<th align="center">apache2.jjq.com</th>
+<th align="center">client.jjq.com</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">eth0：192.168.32.80 <br> eth1：192.168.32.100</td>
+<td align="center">eth0：192.168.32.81 <br> lo:0 192.168.32.100</td>
+<td align="center">eth0：192.168.32.82 <br> lo:0 192.168.32.100</td>
+<td align="center">eth0：192.168.32.111</td>
+</tr>
+<tr>
+<td align="center">负载调度器</td>
+<td align="center">真实服务器1</td>
+<td align="center">真实服务器2</td>
+<td align="center">模拟客户端</td>
+</tr>
+</tbody></table>
+<h3 id="2-2-实验步骤"><a href="#2-2-实验步骤" class="headerlink" title="2.2 实验步骤"></a>2.2 实验步骤</h3><p>首先依旧是先做时间同步</p>
+<p><strong><font style="color: green">Real Servers:</font></strong></p>
+<ol>
+<li>停止NetworkManager服务</li>
+</ol>
+<blockquote>
+<p>[lvs&amp;apache1&amp;apache2]# /etc/init.d/NetworkManager stop</p>
+</blockquote>
+<ol start="2">
+<li>添加lo回环网卡的子接口并设置成虚拟ip</li>
+</ol>
+<blockquote>
+<p>[apache1&amp;apache2]# ifconfig lo:0 192.168.32.100/32 up<br>(子网掩码写成32的目的是：有若干机器要使用同一个ip地址，用本身做广播地址和把子网掩码设成4个255就不会造成ip地址冲突了)</p>
+</blockquote>
+<ol start="3">
+<li>配置arp静默</li>
+</ol>
+<p>[apache1&amp;apcahe2]# vim /etc/sysctl.conf</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">net.ipv4.conf.all.arp_ignore = 1</span><br><span class="line">net.ipv4.conf.all.arp_announce = 2</span><br><span class="line">net.ipv4.conf.default.arp_ignore = 1</span><br><span class="line">net.ipv4.conf.default.arp_announce = 2</span><br><span class="line">net.ipv4.conf.lo.arp_ignore = 1</span><br><span class="line">net.ipv4.conf.lo.arp_announce = 2</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>添加路由指向</li>
+</ol>
+<blockquote>
+<p>[apache1&amp;apache2]#  route add -host 192.168.32.100 dev lo:0</p>
+</blockquote>
+<p><strong><font style="color: green">Director Server:</font></strong></p>
+<ol>
+<li>在eth0上开启一个子接口</li>
+</ol>
+<blockquote>
+<p>[root@lvs ~]# ifconfig eth0:0 192.168.32.100/24 up</p>
+</blockquote>
+<ol start="2">
+<li>修改内核参数优化</li>
+</ol>
+<blockquote>
+<p>[root@lvs ~]# vim /etc/sysctl.conf</p>
+</blockquote>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">net.ipv4.conf.eth0.send_redirects = 0</span><br><span class="line">​net.ipv4.conf.all.send_redirects = 0</span><br><span class="line">​net.ipv4.conf.default.send_redirects = 0</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>安装ipvsadm工具</li>
+</ol>
+<blockquote>
+<p>[root@lvs ~]# yum install -y ipvsadm</p>
+</blockquote>
+<ol start="4">
+<li>设置集群的虚拟IP</li>
+</ol>
+<blockquote>
+<p>[root@lvs ~]# ipvsadm -A -t 192.168.32.100:80 -s rr</p>
+</blockquote>
+<ol start="5">
+<li>指定Real Server主机的IP</li>
+</ol>
+<blockquote>
+<p>[root@lvs ~]# ipvsadm -a -t 192.168.32.100:80 -r 192.168.32.81:80 -g<br>[root@lvs ~]# ipvsadm -a -t 192.168.32.100:80 -r 192.168.32.82:80 -g</p>
+</blockquote>
+<ol start="6">
+<li>保存ipvsadm设置</li>
+</ol>
+<blockquote>
+<p>[root@lvs ~]# service ipvsadm save</p>
+</blockquote>
+<h2 id="三-Keepalived高可用搭建"><a href="#三-Keepalived高可用搭建" class="headerlink" title="三. Keepalived高可用搭建"></a>三. Keepalived高可用搭建</h2><h3 id="3-1-概述Keepalived"><a href="#3-1-概述Keepalived" class="headerlink" title="3.1 概述Keepalived"></a>3.1 概述Keepalived</h3><p>Keepalived是基于VRRP协议(虚拟路由冗余协议)开发的高可用套件。VRRP，可以认为是实现路由器高可用的协议，将多台功能相同的路由器组成一个路由器组，组里有一个master和多个backup，master上面有一个对外提供服务的vip(Virtual IP)，master会发组播。当backup收不到包时就认为master宕掉了，这时就需要根据VRRP的优先级来选举一个backup作为新的master，这样就可以保证高可用。</p>
+<h3 id="3-2-实验环境"><a href="#3-2-实验环境" class="headerlink" title="3.2 实验环境"></a>3.2 实验环境</h3><table>
+<thead>
+<tr>
+<th align="center">lvs_master.jjq.com</th>
+<th align="center">lvs_slave.jjq.com</th>
+<th align="center">apache1.jjq.com</th>
+<th align="center">apache2.jjq.com</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">lvs+keepalived_master</td>
+<td align="center">lvs+keepalived_slave</td>
+<td align="center">apache1</td>
+<td align="center">apche2</td>
+</tr>
+<tr>
+<td align="center">eth0:192.168.32.80<br>eth0:0 192.168.32.100/24</td>
+<td align="center">eth0: 192.168.32.81<br>eth0:0 192.168.32.100/24</td>
+<td align="center">eth0: 192.168.32.82<br>lo:0 192.168.32.100/32</td>
+<td align="center">eth0: 192.168.32.83<br>lo:0 192.168.32.100/32</td>
+</tr>
+</tbody></table>
+<h3 id="3-3-实验步骤"><a href="#3-3-实验步骤" class="headerlink" title="3.3 实验步骤"></a>3.3 实验步骤</h3><blockquote>
+<p>  1.配置回环网卡的子接口</p>
+</blockquote>
+<p>​    [root@apache1 ~]# ifconfig lo:0 192.168.32.100/32 up</p>
+<p>​    [root@apache2 ~]# ifconfig lo:0 192.168.32.100/32 up</p>
+<blockquote>
+<p>  2.设置arp静默</p>
+</blockquote>
+<p>​    /etc/sysctl.conf</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">net.ipv4.conf.all.arp_ignore = 1</span><br><span class="line">net.ipv4.conf.all.arp_announce = 2</span><br><span class="line">net.ipv4.conf.default.arp_ignore = 1</span><br><span class="line">net.ipv4.conf.default.arp_announce = 2</span><br><span class="line">net.ipv4.conf.lo.arp_ignore = 1</span><br><span class="line">net.ipv4.conf.lo.arp_announce = 2</span><br></pre></td></tr></table></figure>
+
+<p>​    sysctl -p 刷新</p>
+<blockquote>
+<p>  3.写路由表</p>
+</blockquote>
+<p>​    [root@apache1 ~]# route add -host 192.168.32.100 dev lo:0</p>
+<p>​    [root@apache2 ~]# route add -host 192.168.32.100 dev lo:0</p>
+<blockquote>
+<p>  4.开启httpd服务并写入网页</p>
+</blockquote>
+<p>​    [root@apache1 ~]# curl localhost<br>​    apache1</p>
+<p>​    [root@apache2 yum.repos.d]# curl localhost<br>​    apache2</p>
+<p><strong><font style="color: green">Director Server:</font></strong></p>
+<blockquote>
+<p>  1.启动eth0:0子接口</p>
+</blockquote>
+<p>​    [root@lvs1 ~]# ifconfig eth0:0 192.168.32.100/24 up</p>
+<blockquote>
+<p>  2.安装ipvsadm</p>
+</blockquote>
+<p>​    [root@lvs1 ~]# yum install -y ipvsadm</p>
+<p>​    [root@lvs1 ~]# service ipvsadm save</p>
+<p><font style="color:green"><b>Keepalived：</b></font></p>
+<p>lvs1：</p>
+<blockquote>
+<p>  1.安装依赖</p>
+</blockquote>
+<p>​    [root@lvs1 opt]# yum -y install kernel-devel openssl-devel popt-devel gcc*</p>
+<blockquote>
+<p>  2.解压缩并安装</p>
+</blockquote>
+<p>​    [root@lvs1 opt]# tar zxvf keepalived-1.2.2.tar.gz</p>
+<p>​    [root@lvs1 keepalived-1.2.2]# ./configure –prefix=/ –with-kernel-dir=/usr/src/kernels/2.6.32-642.el6.x86_64/ &amp;&amp; make make install              <strong># 注意安装目录一定要选择根</strong></p>
+<blockquote>
+<p>  3.修改配置文件</p>
+</blockquote>
+<p>​    [root@lvs1 ~]# vim /etc/keepalived/keepalived.conf </p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">global_defs &#123;</span><br><span class="line">   router_id LVS_1</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">vrrp_instance VI_1 &#123;</span><br><span class="line">    state MASTER</span><br><span class="line">    interface eth0</span><br><span class="line">    virtual_router_id 100</span><br><span class="line">    priority 40</span><br><span class="line">    advert_int 1</span><br><span class="line">    authentication &#123;</span><br><span class="line">        auth_type PASS</span><br><span class="line">        auth_pass 1111</span><br><span class="line">    &#125;</span><br><span class="line">    virtual_ipaddress &#123;</span><br><span class="line">        192.168.32.100</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">virtual_server 192.168.32.100 80 &#123;</span><br><span class="line">    delay_loop 6</span><br><span class="line">    lb_algo rr</span><br><span class="line">    lb_kind DR</span><br><span class="line">    protocol TCP</span><br><span class="line"></span><br><span class="line">    real_server 192.168.32.82 80 &#123;</span><br><span class="line">        weight 1</span><br><span class="line">        TCP_CHECK &#123;</span><br><span class="line">            connect_port 80</span><br><span class="line">            connect_timeout 3</span><br><span class="line">            nb_get_retry 3</span><br><span class="line">            delay_before_retry 3</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    real_server 192.168.32.83 80 &#123;</span><br><span class="line">        weight 1</span><br><span class="line">        TCP_CHECK &#123;</span><br><span class="line">            connect_port 80</span><br><span class="line">            connect_timeout 3</span><br><span class="line">            nb_get_retry 3</span><br><span class="line">            delay_before_retry 3</span><br><span class="line">        &#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>  4.开启keepalived服务</p>
+</blockquote>
+<p>​    [root@lvs1 ~]# /etc/init.d/keepalived start</p>
+<blockquote>
+<p>  5.查看ipvsadm规则</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">​[root@lvs1 ~]# ipvsadm</span><br><span class="line">​IP Virtual Server version 1.2.1 (size=4096)</span><br><span class="line">Prot LocalAddress:Port Scheduler Flags</span><br><span class="line">​  -&gt; RemoteAddress:Port           Forward Weight ActiveConn InActConn</span><br><span class="line">TCP  192.168.32.100:http rr</span><br><span class="line">  -&gt; slave2.jjq.com:http          Route   1      0          0         </span><br><span class="line">  -&gt; 192.168.32.83:http           Route   1      0          0</span><br></pre></td></tr></table></figure>
+
+<p>输入命令 ip a 查看浮动的虚拟ip</p>
+<p>第二台keepalived同理</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">! Configuration File <span class="keyword">for</span> keepalived</span><br><span class="line"></span><br><span class="line">global_defs &#123;</span><br><span class="line">   router_id LVS_2</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">vrrp_instance VI_1 &#123;</span><br><span class="line">    state SLAVE       <span class="comment"># 这里改成slave</span></span><br><span class="line">    interface eth0</span><br><span class="line">    virtual_router_id 100   <span class="comment"># 组号一定要一样</span></span><br><span class="line">    priority 80    <span class="comment"># 权重不能一样</span></span><br><span class="line">    advert_int 1</span><br><span class="line">    authentication &#123;</span><br><span class="line">        auth_type PASS</span><br><span class="line">        auth_pass 1111</span><br><span class="line">    &#125;</span><br><span class="line">    virtual_ipaddress &#123;</span><br><span class="line">        192.168.32.100</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">virtual_server 192.168.32.100 80 &#123;</span><br><span class="line">    delay_loop 6</span><br><span class="line">    lb_algo rr</span><br><span class="line">    lb_kind DR</span><br><span class="line">    protocol TCP</span><br><span class="line"></span><br><span class="line">    real_server 192.168.32.82 80 &#123;</span><br><span class="line">        weight 1</span><br><span class="line">        TCP_CHECK &#123;</span><br><span class="line">            connect_port 80</span><br><span class="line">            connect_timeout 3</span><br><span class="line">            nb_get_retry 3</span><br><span class="line">            delay_before_retry 3</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    real_server 192.168.32.83 80 &#123;</span><br><span class="line">        weight 1</span><br><span class="line">        TCP_CHECK &#123;</span><br><span class="line">            connect_port 80</span><br><span class="line">            connect_timeout 3</span><br><span class="line">            nb_get_retry 3</span><br><span class="line">            delay_before_retry 3</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意：route_id和priority组都必须和主不一样，虚拟route_id组号必须一样</p>
+<p>测试： 将其中一个httpd服务关闭，ipvsadm会将出故障的机器剔除规则。将其中一个keepalived杀死，另一个会重新接替原来keepalived的工作，也就是浮动虚拟ip。</p>
+<p>为了使其恢复服务后不抢占资源，最好使用不抢占模式在vrrp_instance模式中添加nopreempt。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>DR模式防火墙配置</p>
+<blockquote>
+<p>iptables -I INPUT -m state –state NEW -m tcp -p tcp –dport 80 -j ACCEPT</p>
+</blockquote>
+
+            <!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->
+            <audio id="audio" loop="1" preload="auto" controls="controls" data-autoplay="true">
+                <source type="audio/mpeg" src="http://45.76.49.184:10043/music/Canon.mp3">
+            </audio>
+            
+        </div>
+        
+    <div id='gitalk-container' class="comment link"
+        data-ae='false'
+        data-ci='36c3e141ba1b7d4106ef'
+        data-cs='4fbe41378a22ef3b9b2cf91cf3ce4895aa2723d8'
+        data-r='jjq-spirit.github.io'
+        data-o='jjq-spirit'
+        data-a='jjq-spirit'
+        data-d='true'
+    >查看评论</div>
+
+
+    </div>
+    
+        <div class='side'>
+            <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#LVS安装配置及高可用实现"><span class="toc-text">LVS安装配置及高可用实现</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#一-LVS-NAT模式搭建"><span class="toc-text">一. LVS-NAT模式搭建</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-实验环境"><span class="toc-text">1.1 实验环境</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-实验步骤"><span class="toc-text">1.2 实验步骤</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#二-LVS-DR模式搭建"><span class="toc-text">二. LVS-DR模式搭建</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-实验环境"><span class="toc-text">2.1 实验环境</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-实验步骤"><span class="toc-text">2.2 实验步骤</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#三-Keepalived高可用搭建"><span class="toc-text">三. Keepalived高可用搭建</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-概述Keepalived"><span class="toc-text">3.1 概述Keepalived</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-实验环境"><span class="toc-text">3.2 实验环境</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-实验步骤"><span class="toc-text">3.3 实验步骤</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#小结"><span class="toc-text">小结</span></a></li></ol></li></ol>
+        </div>
+    
+</div>
+
+
+    </div>
+</div>
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginModelPath":"assets/","model":{"jsonPath":"/live2dw/assets/hibiki.model.json"},"display":{"position":"left","width":200,"height":435,"hOffset":-5},"mobile":{"show":false},"react":{"opacity":0.8},"dialog":{"enable":true,"hitokoto":true},"log":false,"pluginJsPath":"lib/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+<script src="//lib.baomitu.com/jquery/1.8.3/jquery.min.js"></script>
+<script src="/js/plugin.js"></script>
+<script src="/js/diaspora.js"></script>
+<link rel="stylesheet" href="/photoswipe/photoswipe.css">
+<link rel="stylesheet" href="/photoswipe/default-skin/default-skin.css">
+<script src="/photoswipe/photoswipe.min.js"></script>
+<script src="/photoswipe/photoswipe-ui-default.min.js"></script>
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+            <div class="pswp__top-bar">
+                <!--  Controls are self-explanatory. Order can be changed. -->
+                <div class="pswp__counter"></div>
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                      <div class="pswp__preloader__cut">
+                        <div class="pswp__preloader__donut"></div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div> 
+            </div>
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Google Analytics -->
+<script type="text/javascript">
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-153135716-1', 'auto');
+  ga('send', 'pageview');
+</script>
+<!-- End Google Analytics -->
+
+
+</html>
